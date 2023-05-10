@@ -1,28 +1,30 @@
 from flask import Flask, flash, redirect, render_template, request
 from werkzeug.utils import secure_filename
 from subprocess import run
-import os
-from PIL import Image
 import subprocess
+import os
+import glob
+from PIL import Image
 from tqdm import tqdm
 from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.compiler import Compiler, interfaces
 from svg_to_gcode.formulas import linear_map
-import time
-from svg_to_gcode import TOLERANCES
+import serial
 import RPi.GPIO as GPIO
 import time
+from svg_to_gcode import TOLERANCES
+
 app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = "static/Image_Storage/Images/"
-app.config["GCODE_FOLDER"] = "static/Image_Storage/Gcodes/"
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Images/")
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Gcodes/")
+
 
 SHELL_SCRIPT_DIRECTORY = "/home/pi/my_flask/UI_Buttons_Bash/"
 #Hello
 
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
-
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -33,6 +35,9 @@ def home():
             file = request.files["file1"]
             if file and allowed_file(file.filename, ["jpg", "jpeg", "png"]):
                 # Delete Previous Image
+                prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
+                for f in prev_images:
+                    os.remove(f)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
                 flash("Image has been Uploaded Successfully.")
                 img = Image.open(os.path.join(app.config["UPLOAD_FOLDER"], file.filename))
@@ -45,7 +50,7 @@ def home():
                     img_resize_lanczos = img.resize((200, 200), Image.LANCZOS)
 
                 resized_filename = "resized_" + secure_filename(file.filename)
-
+                
                 img_resize_lanczos.save(
                     os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
                 )
@@ -53,7 +58,7 @@ def home():
                     subprocess.run(
                         [
                             "convert",
-                            (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
+                            os.path.join(app.config["UPLOAD_FOLDER"], file.filename),
                             "-threshold",
                             "50%",
                             "-background",
@@ -86,16 +91,15 @@ def home():
                         if power < 0 or power > 1:
                             raise ValueError(f"{power} is out of bounds. Pen position must be given between 0 and 1. "
                                              f"The interface will scale it correctly.")
-
-                        position = linear_map(0, 0, power)
-                        return f"M03 S160;\n" + f"G1 Z{position:.2f} F2000;"
+                        position = linear_map(0, 1, power)
+                        return f"M03 S160;"
 
                 gcode_compiler = Compiler(CustomInterface, movement_speed=1000, cutting_speed=200, pass_depth=0)
 
                 curves = parse_file(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))
 
                 gcode_compiler.append_curves(curves) 
-                gcode_compiler.feed_rate = 2000  # Set the default feed rate to 2000 mm/min
+               # gcode_compiler.feed_rate = 2000  # Set the default feed rate to 2000 mm/min
                 gcode_compiler.compile_to_file(os.path.join(app.config["GCODE_FOLDER"], "drawing.gcode"))
 
                 flash("Image has been converted successfully.")
@@ -108,47 +112,162 @@ def home():
 
 @app.route("/servo_up/")
 def servo_up():
-    run([SHELL_SCRIPT_DIRECTORY + "Servo_Control/ServoUp.sh"], shell=True)
-    return redirect("/")
+    port = '/dev/ttyUSB0'
+    baud = 115200
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
 
+    motor_PWM = 18
+    sensor1 = 14
+    motor_Direction = 15
+    GPIO.setup(motor_PWM,GPIO.OUT)
+    GPIO.setup(sensor1,GPIO.IN)
+    GPIO.setup(motor_Direction,GPIO.OUT)
+    motor = GPIO.PWM(motor_PWM,100)
+    motor.start(0)
+    while True:
+        sensor = GPIO.input(sensor1)
+        if sensor == 0:
+            GPIO.output(motor_Direction,GPIO.LOW)
+            motor.ChangeDutyCycle(100)
+        else:
+            GPIO.output(motor_Direction,GPIO.LOW)
+            motor.ChangeDutyCycle(0)
+        time.sleep(0.1)
+        print(sensor)
+        break
+    try:
+        ser = serial.Serial(port, baud)
+        flash(f"Connected to {port}")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+        return redirect('/')
+        
+    time.sleep(2)
+    try:
+        ser.write(b'M03 S190;\n'.encode())
+        flash("Servo down command sent")
+    except Exception as e:
+        flash(f"Failed to send servo down command: {e}")
+        ser.close()
+        return redirect('/')
+    while ser.in_waiting == 0:
+        pass
+    response = ser.readline()
+    flash(f"Servo up response: {response}")
+    ser.close() 
+    return redirect('/')
 
 @app.route("/servo_down/")
 def servo_down():
-    run([SHELL_SCRIPT_DIRECTORY + "Servo_Control/ServoDown.sh"], shell=True)
+    port = '/dev/ttyUSB0'
+    baud = 115200
+    try:
+        ser = serial.Serial(port, baud)
+        flash(f"Connected to {port}")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+        return redirect('/')
+    time.sleep(2)
+    try:
+        ser.write(b'M03 S150;\n'.encode())
+        flash("Servo up command sent")
+    except Exception as e:
+        flash(f"Failed to send servo up command: {e}")
+        ser.close()
+        return redirect('/')
+    while ser.in_waiting == 0:
+        pass
+    response = ser.readline()
+    flash(f"Servo up response: {response}")
+    ser.close()
     return redirect("/")
-
-
-@app.route("/connect/")
-def Connect():
-    run([SHELL_SCRIPT_DIRECTORY + "Connect.sh"], shell=True)
-    return redirect("/")
-
 
 @app.route("/Print/")
 def Print():
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(14, GPIO.OUT)
-    GPIO.setup(15,GPIO.OUT)
-    GPIO.output(14, GPIO.LOW)
-    GPIO.output(15, GPIO.HIGH)
-    time.sleep(20)
-    GPIO.output(14, GPIO.LOW)
-    GPIO.output(15, GPIO.LOW)
-   # run([SHELL_SCRIPT_DIRECTORY + "Print.sh"], shell=True)
+    port = '/dev/ttyUSB0'
+    baud = 115200
+    firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_2022-15-01.settings'
+    
+    
+    try:
+        ser = serial.Serial(port, baud)
+        flash(f"Connected to {port}")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+        return redirect('/')
+    time.sleep(2)
+    filename = os.path.join(app.config["GCODE_FOLDER"], "drawing.gcode")
+    try:
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.split(';')[0]
+                ser.write((line + '\n').encode())
+                while ser.in_waiting == 0:
+                    pass
+            flash("Gcode Uploaded")
+    except FileNotFoundError:
+        flash(f"File {filename} not found")
+        ser.close()
+        return redirect('/')
+    except:
+        flash("Failed to upload G-code file")
+        ser.close()
+        return redirect('/')
+    ser.close()
     return redirect("/")
 
 
 @app.route("/homing/")
 def homing():
-    run([SHELL_SCRIPT_DIRECTORY + "Homing.sh"], shell=True)
+    port = '/dev/ttyUSB0'
+    baud = 115200
+    try:
+        ser = serial.Serial(port, baud)
+        flash(f"Connected to {port}")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+        return redirect('/')
+    time.sleep(2)
+    try:
+        ser.write(b'$H\n'.encode())
+        flash("Homing command sent")
+    except Exception as e:
+        flash(f"Failed to send homing command: {e}")
+        ser.close()
+        exit()
+    while ser.in_waiting == 0:
+        pass
+    response = ser.readline()
+    flash(f"Homing response: {response}")
+    ser.close()
     return redirect("/")
 
 
 @app.route("/reset_alarm/")
 def reset_alarm():
-    run([SHELL_SCRIPT_DIRECTORY + "Reset_Alarm.sh"], shell=True)
+    port = '/dev/ttyUSB0'
+    baud = 115200
+    try:
+        ser = serial.Serial(port, baud)
+        flash(f"Connected to {port}")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+        return redirect('/')
+    time.sleep(2)
+    try:
+        ser.write(b'$X\n'.encode())
+        flash("Alarm reset command sent")
+    except Exception as e:
+        flash(f"Failed to send alarm reset command: {e}")
+        ser.close()
+        exit()
+    while ser.in_waiting == 0:
+        pass
+    response = ser.readline()
+    flash(f"Alarm reset response: {response}")
+    ser.close()
     return redirect("/")
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7000, debug=True)
