@@ -19,6 +19,7 @@ while True:
         GPIO.output(motor_Direction,GPIO.LOW)
         motor.ChangeDutyCycle(100)
     else:
+        time.sleep(1)
         GPIO.output(motor_Direction,GPIO.LOW)
         motor.ChangeDutyCycle(0)
     time.sleep(0.1)

@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, render_template, request
+from flask import Flask, flash, redirect, render_template, request, Response
 from werkzeug.utils import secure_filename
 from subprocess import run
 import subprocess
@@ -13,12 +13,17 @@ import serial
 import RPi.GPIO as GPIO
 import time
 from svg_to_gcode import TOLERANCES
-
+from asyncio import sleep
+from flask_socketio import SocketIO
 app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Images/")
 app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Gcodes/")
 
+old_filename = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/drawing.gcode"
+num_lines = 1  
+top_string = """G92 X0 Y0;\n"""
+bottom_string = """G1 X0 Y0;\n"""
 
 SHELL_SCRIPT_DIRECTORY = "/home/pi/my_flask/UI_Buttons_Bash/"
 #Hello
@@ -33,7 +38,7 @@ def home():
         size = request.form.get("size_selector")
         if submit_button == "Upload Image":
             file = request.files["file1"]
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp"]):
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
@@ -85,14 +90,13 @@ def home():
                         self.fan_speed = 1
 
                     def laser_off(self):
-                        return "M03 S190;"
+                        return "M03 S190;\nG4 P0.2;"
 
                     def set_laser_power(self, power):
                         if power < 0 or power > 1:
                             raise ValueError(f"{power} is out of bounds. Pen position must be given between 0 and 1. "
                                              f"The interface will scale it correctly.")
-                        position = linear_map(0, 1, power)
-                        return f"M03 S160;"
+                        return f"M03 S160;\nG4 P0.2;"
 
                 gcode_compiler = Compiler(CustomInterface, movement_speed=1000, cutting_speed=200, pass_depth=0)
 
@@ -101,6 +105,15 @@ def home():
                 gcode_compiler.append_curves(curves) 
                # gcode_compiler.feed_rate = 2000  # Set the default feed rate to 2000 mm/min
                 gcode_compiler.compile_to_file(os.path.join(app.config["GCODE_FOLDER"], "drawing.gcode"))
+                
+                with open(old_filename, 'r') as f:
+                    old_data = f.readlines()
+                    new_data = old_data[:num_lines] + [top_string] + old_data[num_lines:]    
+                with open(old_filename,'w') as f:
+                    f.writelines(new_data + old_data[num_lines:])
+
+                with open(old_filename, 'a') as f:
+                    f.write(bottom_string)
 
                 flash("Image has been converted successfully.")
 
@@ -187,7 +200,7 @@ def servo_down():
 def Print():
     port = '/dev/ttyUSB0'
     baud = 115200
-    firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_2022-15-01.settings'
+    #firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_2022-15-01.settings'
     
     
     try:
