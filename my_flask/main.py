@@ -38,7 +38,7 @@ def home():
         size = request.form.get("size_selector")
         if submit_button == "Upload Image":
             file = request.files["file1"]
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp", "svg"]):
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
@@ -48,7 +48,7 @@ def home():
                 img = Image.open(os.path.join(app.config["UPLOAD_FOLDER"], file.filename))
 
                 if size == "small":
-                    img_resize_lanczos = img.resize((100, 100), Image.LANCZOS)
+                    img_resize_lanczos = img.resize((100, 200), Image.LANCZOS)
                 elif size == "medium":
                     img_resize_lanczos = img.resize((150, 150), Image.LANCZOS)
                 elif size == "large":
@@ -79,42 +79,10 @@ def home():
                             ),
                         ]
                     )
-
+                reformed_filename = "reformed" + resized_filename[:-4]+ ".svg"
                 # Convert SVG to GCODE
-                
-                TOLERANCES['approximation'] = 0.01
-                
-                class CustomInterface(interfaces.Gcode):
-                    def __init__(self):
-                        super().__init__()
-                        self.fan_speed = 1
-
-                    def laser_off(self):
-                        return "M03 S190;\nG4 P0.2;"
-
-                    def set_laser_power(self, power):
-                        if power < 0 or power > 1:
-                            raise ValueError(f"{power} is out of bounds. Pen position must be given between 0 and 1. "
-                                             f"The interface will scale it correctly.")
-                        return f"M03 S160;\nG4 P0.2;"
-
-                gcode_compiler = Compiler(CustomInterface, movement_speed=1000, cutting_speed=200, pass_depth=0)
-
-                curves = parse_file(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))
-
-                gcode_compiler.append_curves(curves) 
-               # gcode_compiler.feed_rate = 2000  # Set the default feed rate to 2000 mm/min
-                gcode_compiler.compile_to_file(os.path.join(app.config["GCODE_FOLDER"], "drawing.gcode"))
-                
-                with open(old_filename, 'r') as f:
-                    old_data = f.readlines()
-                    new_data = old_data[:num_lines] + [top_string] + old_data[num_lines:]    
-                with open(old_filename,'w') as f:
-                    f.writelines(new_data + old_data[num_lines:])
-
-                with open(old_filename, 'a') as f:
-                    f.write(bottom_string)
-
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "linemerge", "-t 0.1mm", "linesort", "write", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4] + ".svg"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", 'butterfly.gcode'])
                 flash("Image has been converted successfully.")
 
             else:
