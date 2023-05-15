@@ -3,6 +3,15 @@
     text-align: center;
   }
 
+  #Gcode{
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #337ab7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+  }
+
   h1 {
     font-size: 36px;
     margin-top: 50px;

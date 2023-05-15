@@ -15,18 +15,12 @@ import time
 from svg_to_gcode import TOLERANCES
 from asyncio import sleep
 from flask_socketio import SocketIO
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Images/")
 app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Gcodes/")
 
-old_filename = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/drawing.gcode"
-num_lines = 1  
-top_string = """G92 X0 Y0;\n"""
-bottom_string = """G1 X0 Y0;\n"""
 
-SHELL_SCRIPT_DIRECTORY = "/home/pi/my_flask/UI_Buttons_Bash/"
-#Hello
 
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
@@ -84,9 +78,16 @@ def home():
                 subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "linemerge", "-t 0.1mm", "linesort", "write", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4] + ".svg"))])
                 subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", 'butterfly.gcode'])
                 flash("Image has been converted successfully.")
-
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
+        elif submit_button == "Upload GCODE":
+            file = request.files["file2"]
+            if file and allowed_file(file.filename, ["gcode"]):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config["GCODE_FOLDER"], filename))
+                flash("GCODE has been Uploaded Successfully.")
+            else:
+                flash("Invalid file format. Only GCODE files are allowed.")
         return redirect("/")
     return render_template('base.html')
 
