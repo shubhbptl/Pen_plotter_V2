@@ -49,7 +49,7 @@
       </div>
     </form>
     <form method="post" enctype="multipart/form-data" id="form2" name="form2">
-      <input class="upload_Image" type="file" name="file2" accept=".gcode"> <input class="upload_Image" type="submit" value="Upload GCODE" name="submit_button">
+      <input class="upload_Image" type="file" name="file2" accept=".txt"> <input class="upload_Image" type="submit" value="Upload TEXT" name="submit_button">
     </form>{% for message in get_flashed_messages() %}
     <div class="alert alert-danger">
       {{ message }}

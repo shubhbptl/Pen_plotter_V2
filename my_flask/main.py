@@ -19,6 +19,7 @@ app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Images/")
 app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Gcodes/")
+app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Text/")
 
 
 
@@ -76,18 +77,19 @@ def home():
                 reformed_filename = "reformed" + resized_filename[:-4]+ ".svg"
                 # Convert SVG to GCODE
                 subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "linemerge", "-t 0.1mm", "linesort", "write", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4] + ".svg"))])
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", 'butterfly.gcode'])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Image_Gcode.gcode"))])
                 flash("Image has been converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
-        elif submit_button == "Upload GCODE":
+        elif submit_button == "Upload TEXT":
             file = request.files["file2"]
-            if file and allowed_file(file.filename, ["gcode"]):
+            if file and allowed_file(file.filename, ["txt"]):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config["GCODE_FOLDER"], filename))
-                flash("GCODE has been Uploaded Successfully.")
+                file.save(os.path.join(app.config["TEXT_FOLDER"], "Text.txt"))
+                subprocess.run(["vpype", "text", open(os.path.join(app.config["TEXT_FOLDER"], "Text.txt")).read(), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Text_Gcode.gcode"))])
+                flash("Text file has been Uploaded Successfully.")
             else:
-                flash("Invalid file format. Only GCODE files are allowed.")
+                flash("Invalid file format. Only .txt files are allowed.")
         return redirect("/")
     return render_template('base.html')
 
