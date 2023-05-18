@@ -12,9 +12,9 @@ from svg_to_gcode import TOLERANCES
 from asyncio import sleep
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")
-app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Text")
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")
+app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")
 
 
 
@@ -72,7 +72,7 @@ def home():
                 reformed_filename = "reformed" + resized_filename[:-4]+ ".svg"
                 # Convert SVG to GCODE
 
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "gcode", (os.path.join(app.config["GCODE_FOLDER"], "Pervious.gcode"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Pervious.gcode"))])
                 flash("Image has been converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
@@ -82,7 +82,7 @@ def home():
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
                 subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
-                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "gcode", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plottervpype ", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")

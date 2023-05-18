@@ -50,19 +50,7 @@
     </form>
 
     <form method="post" enctype="multipart/form-data">
-      <div>
-        <input type="file" name="file2"> <select name="size_selector">
-          <option value="small">
-            Small
-          </option>
-          <option value="medium">
-            Medium
-          </option>
-          <option value="large">
-            Large
-          </option>
         </select> <input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
-      </div>
     </form>
     {% for message in get_flashed_messages() %}
     <div class="alert alert-danger">
