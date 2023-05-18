@@ -45,12 +45,26 @@
           <option value="large">
             Large
           </option>
-        </select> <input type="submit" name="submit_button" value="Upload Image">
+        </select> <input type="submit" name="submit_button" accept = ".pdf" value="Upload Image">
       </div>
     </form>
-    <form method="post" enctype="multipart/form-data" id="form2" name="form2">
-      <input class="upload_Image" type="file" name="file2" accept=".txt"> <input class="upload_Image" type="submit" value="Upload TEXT" name="submit_button">
-    </form>{% for message in get_flashed_messages() %}
+
+    <form method="post" enctype="multipart/form-data">
+      <div>
+        <input type="file" name="file2"> <select name="size_selector">
+          <option value="small">
+            Small
+          </option>
+          <option value="medium">
+            Medium
+          </option>
+          <option value="large">
+            Large
+          </option>
+        </select> <input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
+      </div>
+    </form>
+    {% for message in get_flashed_messages() %}
     <div class="alert alert-danger">
       {{ message }}
     </div>{% endfor %} 
@@ -61,8 +75,8 @@
                                 alert("File has been Uploaded");
                         }
                         document.querySelector("#form").addEventListener("click", alertFunction);
-    </script> <!--<a href="PEN-PLOstatic/Image-Storage/Images/Pen-Plotter.svg" download="" id="download-svg">Download</a> -->
-     <!--    <a href="/upload">Draw Gcode File</a>  -->
+    </script> <a href="/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images/reformedresized_yellow-simple-flower-no-1-1640395.svg" download="" id="download-svg">Download</a> 
+       <!--<a href="/upload">Draw Gcode File</a> -->
      <object id="squigglecam" data="https://msurguy.github.io/SquiggleCam/">
     </object> <!--            Control-Ends            -->
   </div>

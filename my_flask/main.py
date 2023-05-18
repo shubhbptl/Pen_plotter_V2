@@ -6,20 +6,15 @@ import os
 import glob
 from PIL import Image
 from tqdm import tqdm
-from svg_to_gcode.svg_parser import parse_file
-from svg_to_gcode.compiler import Compiler, interfaces
-from svg_to_gcode.formulas import linear_map
 import serial
-import RPi.GPIO as GPIO
 import time
 from svg_to_gcode import TOLERANCES
 from asyncio import sleep
-from flask_socketio import SocketIO
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Images/")
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Gcodes/")
-app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "static/Image_Storage/Text/")
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")
+app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Text")
 
 
 
@@ -33,7 +28,7 @@ def home():
         size = request.form.get("size_selector")
         if submit_button == "Upload Image":
             file = request.files["file1"]
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp", "svg"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp", "pdf"]):
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
@@ -76,20 +71,21 @@ def home():
                     )
                 reformed_filename = "reformed" + resized_filename[:-4]+ ".svg"
                 # Convert SVG to GCODE
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "linemerge", "-t 0.1mm", "linesort", "write", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4] + ".svg"))])
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], reformed_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Image_Gcode.gcode"))])
+
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "gcode", (os.path.join(app.config["GCODE_FOLDER"], "Pervious.gcode"))])
                 flash("Image has been converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
-        elif submit_button == "Upload TEXT":
+        elif submit_button == "Upload PDF":
             file = request.files["file2"]
-            if file and allowed_file(file.filename, ["txt"]):
+            if file and allowed_file(file.filename, ["pdf"]):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config["TEXT_FOLDER"], "Text.txt"))
-                subprocess.run(["vpype", "text", open(os.path.join(app.config["TEXT_FOLDER"], "Text.txt")).read(), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Text_Gcode.gcode"))])
+                file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
+                subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "gcode", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
-                flash("Invalid file format. Only .txt files are allowed.")
+                flash("Invalid file format. Only .pdf files are allowed.")
         return redirect("/")
     return render_template('base.html')
 
@@ -98,28 +94,6 @@ def home():
 def servo_up():
     port = '/dev/ttyUSB0'
     baud = 115200
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-
-    motor_PWM = 18
-    sensor1 = 14
-    motor_Direction = 15
-    GPIO.setup(motor_PWM,GPIO.OUT)
-    GPIO.setup(sensor1,GPIO.IN)
-    GPIO.setup(motor_Direction,GPIO.OUT)
-    motor = GPIO.PWM(motor_PWM,100)
-    motor.start(0)
-    while True:
-        sensor = GPIO.input(sensor1)
-        if sensor == 0:
-            GPIO.output(motor_Direction,GPIO.LOW)
-            motor.ChangeDutyCycle(100)
-        else:
-            GPIO.output(motor_Direction,GPIO.LOW)
-            motor.ChangeDutyCycle(0)
-        time.sleep(0.1)
-        print(sensor)
-        break
     try:
         ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
@@ -254,4 +228,4 @@ def reset_alarm():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7000, debug=True)
+    app.run(host="0.0.0.0", port=5050, debug=True)
