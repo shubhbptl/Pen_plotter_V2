@@ -50,7 +50,8 @@
     </form>
 
     <form method="post" enctype="multipart/form-data">
-        </select> <input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
+      <input type="file" name="file2">
+    <input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
     </form>
     {% for message in get_flashed_messages() %}
     <div class="alert alert-danger">
@@ -65,7 +66,7 @@
                         document.querySelector("#form").addEventListener("click", alertFunction);
     </script> <a href="/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images/reformedresized_yellow-simple-flower-no-1-1640395.svg" download="" id="download-svg">Download</a> 
        <!--<a href="/upload">Draw Gcode File</a> -->
-     <object id="squigglecam" data="https://msurguy.github.io/SquiggleCam/">
+   <!--  <object id="squigglecam" data="https://msurguy.github.io/SquiggleCam/"> -->
     </object> <!--            Control-Ends            -->
   </div>
   <script>

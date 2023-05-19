@@ -69,7 +69,6 @@ def home():
                             ),
                         ]
                     )
-                reformed_filename = "reformed" + resized_filename[:-4]+ ".svg"
                 # Convert SVG to GCODE
 
                 subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Pervious.gcode"))])
@@ -81,8 +80,10 @@ def home():
             if file and allowed_file(file.filename, ["pdf"]):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
-                subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
-                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plottervpype ", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
+                for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
+                    subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
+                    subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
@@ -128,7 +129,7 @@ def servo_down():
         return redirect('/')
     time.sleep(2)
     try:
-        ser.write(b'M03 S150;\n'.encode())
+        ser.write((b'M03 S150;\n').encode())
         flash("Servo up command sent")
     except Exception as e:
         flash(f"Failed to send servo up command: {e}")
@@ -145,8 +146,7 @@ def servo_down():
 def Print():
     port = '/dev/ttyUSB0'
     baud = 115200
-    #firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_2022-15-01.settings'
-    
+    firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_onlykeys.txt'
     
     try:
         ser = serial.Serial(port, baud)
@@ -155,15 +155,27 @@ def Print():
         flash(f"Failed to connect to {port}")
         return redirect('/')
     time.sleep(2)
-    filename = os.path.join(app.config["GCODE_FOLDER"], "drawing.gcode")
     try:
-        with open(filename, 'r') as f:
-            for line in f:
-                line = line.split(';')[0]
-                ser.write((line + '\n').encode())
-                while ser.in_waiting == 0:
-                    pass
-            flash("Gcode Uploaded")
+        for i in tqdm(range(100), desc="uploading firmware: " , leave=True):
+            with open(firmware_file, 'r') as f:
+                for line in f:
+                    line = line.split(";")[0]
+                    ser.write((line + '\n').encode())
+                    while ser.in_waiting == 0:
+                        pass
+        flash("firmware uploaded")
+    except FileNotFoundError:
+        flash(f"File {firmware_file} not uploaded")
+    filename = os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode")
+    try:
+        for i in tqdm(range(100), desc="uploading gcode: ", leave=True):
+            with open(filename, 'r') as f:
+                for line in f:
+                    line = line.split(';')[0]
+                    ser.write((line + '\n').encode())
+                    while ser.in_waiting == 0:
+                        pass
+        flash("Gcode Uploaded")
     except FileNotFoundError:
         flash(f"File {filename} not found")
         ser.close()
@@ -188,7 +200,7 @@ def homing():
         return redirect('/')
     time.sleep(2)
     try:
-        ser.write(b'$H\n'.encode())
+        ser.write(('$H\n').encode())
         flash("Homing command sent")
     except Exception as e:
         flash(f"Failed to send homing command: {e}")
@@ -214,7 +226,8 @@ def reset_alarm():
         return redirect('/')
     time.sleep(2)
     try:
-        ser.write(b'$X\n'.encode())
+        for i in tqdm(range(100), desc="reseting alarm: ", leave=True):
+            ser.write(('$X\n').encode())
         flash("Alarm reset command sent")
     except Exception as e:
         flash(f"Failed to send alarm reset command: {e}")
@@ -228,4 +241,4 @@ def reset_alarm():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5050, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)
