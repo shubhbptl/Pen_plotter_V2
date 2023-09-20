@@ -14,3 +14,6 @@ document_end = """M5
 G00 X0.0000 Y0.0000
 M2"""
 invert_y = true
+
+# from home
+.local/pipx/venvs/vpype/lib/python3.10/site-packages/vpype_gcode/bundled_configs.toml
