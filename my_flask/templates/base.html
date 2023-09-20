@@ -2,7 +2,8 @@
 <html>
 <head>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
-  <title>Control</title>
+  <title>Pen_Plotter</title>
+  <link rel="icon" type="image/x-icon" href="pen.png">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -16,7 +17,7 @@
       <h1>{{ mesg }}</h1>
     {% endfor %}-->
     <!-- Control-Starts -->
-    <div class="control-container" style="display: inline-block;">
+    <div class="control-container">
       <form action="/homing/">
         <button class="homing-button" name="ResizeBtn" type="submit">Homing</button>
       </form>
@@ -64,12 +65,13 @@
                                 alert("File has been Uploaded");
                         }
                         document.querySelector("#form").addEventListener("click", alertFunction);
-    </script> <a href="/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images/reformedresized_yellow-simple-flower-no-1-1640395.svg" download="" id="download-svg">Download</a> 
+    </script> 
+    <!--<a href="/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images/resized_mathsolveuser_image.svg" download="" id="download-svg">Download</a> --> 
        <!--<a href="/upload">Draw Gcode File</a> -->
    <!--  <object id="squigglecam" data="https://msurguy.github.io/SquiggleCam/"> -->
     </object> <!--            Control-Ends            -->
-  </div>
-  <script>
+  
+    <script>
                 $(document).ready(function () {
                         $('#myTab a').on('click', function (e) {
                                 e.preventDefault()
@@ -80,8 +82,8 @@
                         $('#myTab a[href="#Resize-tab-pane"]').tab('disable');
                         $('#myTab a[href="#Gcode-Converter-tab-pane"]').tab('disable');
                 });
-  </script> 
-  <script>
+    </script> 
+    <script>
 
 
                 $('.nav-tabs a').on('shown.bs.tab', function (event) {
@@ -90,11 +92,12 @@
                         $('.tab-pane .' + y.trim().toLowerCase() + '-buttons').hide();
                         $('.tab-pane .' + x.trim().toLowerCase() + '-buttons').show();
                 });
-  </script> 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- <script src="static/js/progress-bar.js"></script> -->
+    </script> 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- <script src="static/js/progress-bar.js"></script> -->
    
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script> 
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script> 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk" crossorigin="anonymous"></script>
+  </div>
 </body>
 </html>

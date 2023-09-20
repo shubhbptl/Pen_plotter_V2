@@ -7,9 +7,9 @@ import glob
 from PIL import Image
 from tqdm import tqdm
 import serial
+
 import time
-from svg_to_gcode import TOLERANCES
-from asyncio import sleep
+
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
@@ -28,17 +28,16 @@ def home():
         size = request.form.get("size_selector")
         if submit_button == "Upload Image":
             file = request.files["file1"]
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp", "pdf"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp"]):
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
                     os.remove(f)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
-                flash("Image has been Uploaded Successfully.")
-                img = Image.open(os.path.join(app.config["UPLOAD_FOLDER"], file.filename))
+                img = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 
                 if size == "small":
-                    img_resize_lanczos = img.resize((100, 200), Image.LANCZOS)
+                    img_resize_lanczos = img.resize((783, 1123), Image.LANCZOS)
                 elif size == "medium":
                     img_resize_lanczos = img.resize((150, 150), Image.LANCZOS)
                 elif size == "large":
@@ -47,7 +46,7 @@ def home():
                 resized_filename = "resized_" + secure_filename(file.filename)
                 
                 img_resize_lanczos.save(
-                    os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+                    os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
                 )
                 for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
                     subprocess.run(
@@ -70,14 +69,18 @@ def home():
                         ]
                     )
                 # Convert SVG to GCODE
-
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "Pervious.gcode"))])
-                flash("Image has been converted successfully.")
+                subprocess.run(["vpype","read",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "write","--page-size","a4","--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
+                
+                flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
         elif submit_button == "Upload PDF":
             file = request.files["file2"]
             if file and allowed_file(file.filename, ["pdf"]):
+                prev_images = glob.glob(app.config["TEXT_FOLDER"] + '/*')
+                for f in prev_images:
+                    os.remove(f)
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
                 for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
@@ -96,7 +99,8 @@ def servo_up():
     port = '/dev/ttyUSB0'
     baud = 115200
     try:
-        ser = serial.Serial(port, baud)
+        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
+            ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
@@ -104,7 +108,8 @@ def servo_up():
         
     time.sleep(2)
     try:
-        ser.write(b'M03 S190;\n'.encode())
+        for i in tqdm(range(100), desc="servo motor off: ", leave=True):
+            ser.write(b'M03 S190;\n'.encode())
         flash("Servo down command sent")
     except Exception as e:
         flash(f"Failed to send servo down command: {e}")
@@ -122,14 +127,16 @@ def servo_down():
     port = '/dev/ttyUSB0'
     baud = 115200
     try:
-        ser = serial.Serial(port, baud)
+        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
+            ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
         return redirect('/')
     time.sleep(2)
     try:
-        ser.write((b'M03 S150;\n').encode())
+        for i in tqdm(range(100), desc="servo motor on: ", leave=True):
+            ser.write(('M03 S150;\n').encode())
         flash("Servo up command sent")
     except Exception as e:
         flash(f"Failed to send servo up command: {e}")
@@ -149,7 +156,8 @@ def Print():
     firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_onlykeys.txt'
     
     try:
-        ser = serial.Serial(port, baud)
+        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
+            ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
@@ -193,14 +201,16 @@ def homing():
     port = '/dev/ttyUSB0'
     baud = 115200
     try:
-        ser = serial.Serial(port, baud)
+        for i in tqdm(range(100), desc="connecting to the port : ", leave=True):
+            ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
         return redirect('/')
     time.sleep(2)
     try:
-        ser.write(('$H\n').encode())
+        for i in tqdm(range(100), desc="homing the plotter: ", leave=True):
+            ser.write(('$H\n').encode())
         flash("Homing command sent")
     except Exception as e:
         flash(f"Failed to send homing command: {e}")
@@ -214,12 +224,13 @@ def homing():
     return redirect("/")
 
 
-@app.route("/reset_alarm/")
+@app.route("/reset_alarm/")  # press this button if the plotter stops
 def reset_alarm():
     port = '/dev/ttyUSB0'
     baud = 115200
     try:
-        ser = serial.Serial(port, baud)
+        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
+            ser = serial.Serial(port, baud)
         flash(f"Connected to {port}")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
