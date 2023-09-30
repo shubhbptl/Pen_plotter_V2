@@ -5,24 +5,24 @@
 	<h1>Pen Plotter</h1>
 
 	<!-- Control-Starts -->
-	<div class="control-container">
-		<form action="/homing/">
-			<button class="homing-button" name="ResizeBtn" type="submit">Homing</button>
+	<div class="w-25 bg-secondary p-3 rounded">
+		<form class="m-2 d-grid" action="/homing/">
+			<button class="btn btn-primary btn-lg" name="ResizeBtn" type="button">Homing</button>
 		</form>
-		<form action="/reset_alarm/">
-			<button class="reset-alarm-button" name="ResizeBtn" type="submit">Reset Alarm</button>
+		<form class="m-2 d-grid" action="/reset_alarm/">
+			<button class="btn btn-primary btn-lg" name="ResizeBtn" type="button">Reset Alarm</button>
 		</form>
-		<form action="/Print/">
-			<button class="print-button" name="ResizeBtn" type="submit">Print</button>
+		<form class="m-2 d-grid" action="/Print/">
+			<button class="btn btn-primary btn-lg" name="ResizeBtn" type="button">Print</button>
 		</form>
-		<form action="/servo_up/">
-			<button class="servo_up-button" name="ResizeBtn" type="submit" id="servo_up-button">servo_up</button>
+		<form class="m-2 d-grid" action="/servo_up/">
+			<button class="btn btn-primary btn-lg" name="ResizeBtn" type="button" id="servo_up-button">servo_up</button>
 		</form>
-		<form action="/servo_down/">
-			<button class="servo_down-button" name="ResizeBtn" type="submit" id="servo_down-button">servo_down</button>
+		<form class="m-2 d-grid" action="/servo_down/">
+			<button class="btn btn-primary btn-lg" name="ResizeBtn" type="button" id="servo_down-button">servo_down</button>
 		</form>
 	</div>
-	<form method="post" enctype="multipart/form-data">
+	<form class="m-2" method="post" enctype="multipart/form-data">
 		<div>
 			<input type="file" name="file1"> 
 			<select name="size_selector">
@@ -36,13 +36,13 @@
 				Large
 				</option>
 			</select> 
-			<input type="submit" name="submit_button" accept = ".pdf" value="Upload Image">
+			<input type="button" name="submit_button" accept = ".pdf" value="Upload Image">
 		</div>
 	</form>
 
-	<form method="post" enctype="multipart/form-data">
+	<form class="m-2" method="post" enctype="multipart/form-data">
 		<input type="file" name="file2">
-		<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
+		<input type="button" accept = ".pdf" name="submit_button" value="Upload PDF">
 	</form>
 	{% for message in get_flashed_messages() %}
 	<div class="alert alert-danger">
