@@ -2,52 +2,59 @@
 
 {% block body %}
 <div class="page-container">
-	<h1>Pen Plotter</h1>
-
+	<div class="bg-black rounded markdown-body p-2" style="width: 30vw; height: 60vh; overflow: scroll;" id="markdown"></div>
 	<!-- Control-Starts -->
-	<div class="w-25 bg-secondary p-3 rounded">
-		<form class="m-2 d-grid" action="/homing/">
-			<button class="btn btn-primary btn-lg" type="button">Home Pen Plotter</button>
-		</form>
-		<form class="m-2 d-grid" action="/reset_alarm/">
-			<button class="btn btn-primary btn-lg" type="button">Reset Alarm</button>
-		</form>
-		<form class="m-2 d-grid" action="/Print/">
-			<button class="btn btn-primary btn-lg" type="button">Print</button>
-		</form>
-		<form class="m-2 d-grid" action="/servo_up/">
-			<button class="btn btn-primary btn-lg" type="button" id="servo_up-button">Servo Up</button>
-		</form>
-		<form class="m-2 d-grid" action="/servo_down/">
-			<button class="btn btn-primary btn-lg" type="button" id="servo_down-button">Servo Down</button>
-		</form>
-	</div>
-	<form class="m-2" method="post" enctype="multipart/form-data">
-		<div>
-			<input type="file" name="file1"> 
-			<select name="size_selector">
-				<option value="small">
-				Small
-				</option>
-				<option value="medium">
-				Medium
-				</option>
-				<option value="large">
-				Large
-				</option>
-			</select> 
-			<input type="button" name="submit_button" accept = ".pdf" value="Upload Image">
+	<section class="w-100 bg-secondary-subtle rounded row" style="height: 40vh;">
+		<div class="col-4 align-middle p-4">
+			<form class="m-2 d-grid" action="/homing/">
+				<button class="btn btn-primary btn-lg m-1" type="button">Home Pen Plotter</button>
+			</form>
+			<form class="m-2 d-grid" action="/reset_alarm/">
+				<button class="btn btn-primary btn-lg m-1" type="button">Reset Alarm</button>
+			</form>
+			<form class="m-2 d-grid" action="/Print/">
+				<button class="btn btn-primary btn-lg m-1" type="button">Print</button>
+			</form>
+			<form class="m-2 d-grid" action="/servo_up/">
+				<button class="btn btn-primary btn-lg m-1" type="button" id="servo_up-button">Servo Up</button>
+			</form>
+			<form class="m-2 d-grid" action="/servo_down/">
+				<button class="btn btn-primary btn-lg m-1" type="button" id="servo_down-button">Servo Down</button>
+			</form>
 		</div>
-	</form>
 
-	<form class="m-2" method="post" enctype="multipart/form-data">
-		<input type="file" name="file2">
-		<input type="button" accept = ".pdf" name="submit_button" value="Upload PDF">
-	</form>
-	{% for message in get_flashed_messages() %}
+		<div class="col-4">
+			<form class="m-2" method="post" enctype="multipart/form-data">
+				<div>
+					<input type="file" name="file1"> 
+					<select name="size_selector">
+						<option value="small">
+						Small
+						</option>
+						<option value="medium">
+						Medium
+						</option>
+						<option value="large">
+						Large
+						</option>
+					</select> 
+					<input type="button" name="submit_button" accept = ".pdf" value="Upload Image">
+				</div>
+			</form>
+
+			<form class="m-2" method="post" enctype="multipart/form-data">
+				<input type="file" name="file2">
+				<input type="button" accept = ".pdf" name="submit_button" value="Upload PDF">
+			</form>
+		</div>
+		<div class="col-4">
+		{% for message in get_flashed_messages() %}
 		<div class="alert alert-danger">
 			{{ message }}
 		</div>
-	{% endfor %} 
+		{% endfor %} 
+		</div>
+
+	</section>
 </div>
 {% endblock body %}
