@@ -91,7 +91,7 @@ def home():
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
         return redirect("/")
-    return render_template('base.html')
+    return render_template('index.html')
 
 
 @app.route("/servo_up/")
