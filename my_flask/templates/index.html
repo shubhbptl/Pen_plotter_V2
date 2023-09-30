@@ -45,8 +45,9 @@
 		<input type="button" accept = ".pdf" name="submit_button" value="Upload PDF">
 	</form>
 	{% for message in get_flashed_messages() %}
-	<div class="alert alert-danger">
-		{{ message }}
-	</div>{% endfor %} 
+		<div class="alert alert-danger">
+			{{ message }}
+		</div>
+	{% endfor %} 
 </div>
 {% endblock body %}
