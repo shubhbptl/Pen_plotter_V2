@@ -49,13 +49,20 @@
 				<input type="file" name="file2">
 				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
 			</form>
+			<form>
+				<br/>
+				<br/>
+				<br/>
+				<p>Upload gcode file</p>
+				<input type="file" id="inputfile"></input>
+			</form>
 		</div>
 		<div class="col-4">
-		{% for message in get_flashed_messages() %}
-		<div class="alert alert-danger">
-			{{ message }}
-		</div>
-		{% endfor %} 
+			{% for message in get_flashed_messages() %}
+			<div class="alert alert-danger">
+				{{ message }}
+			</div>
+			{% endfor %} 
 		</div>
 
 	</section>
