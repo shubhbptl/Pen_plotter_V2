@@ -16,7 +16,7 @@ const preview = (window.preview = new GCodePreview.init({
 	initialCameraPosition: [0,400,450],
 	//debug: true,
 	allowDragNDrop: true,
-	renderTravel: true
 }));  // draw a diagonal line
+preview.renderTravel = true
 const gcode = ''; 
 preview.processGCode(gcode);
