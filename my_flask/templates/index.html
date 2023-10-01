@@ -7,19 +7,19 @@
 	<section class="w-100 bg-secondary-subtle rounded row" style="height: 40vh;">
 		<div class="col-4 align-middle p-4">
 			<form class="m-2 d-grid" action="/homing/">
-				<button class="btn btn-primary btn-lg m-1" type="button">Home Pen Plotter</button>
+				<button class="btn btn-primary btn-lg m-1" type="submit">Home Pen Plotter</button>
 			</form>
 			<form class="m-2 d-grid" action="/reset_alarm/">
-				<button class="btn btn-primary btn-lg m-1" type="button">Reset Alarm</button>
+				<button class="btn btn-primary btn-lg m-1" type="submit">Reset Alarm</button>
 			</form>
 			<form class="m-2 d-grid" action="/Print/">
-				<button class="btn btn-primary btn-lg m-1" type="button">Print</button>
+				<button class="btn btn-primary btn-lg m-1" type="submit">Print</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_up/">
-				<button class="btn btn-primary btn-lg m-1" type="button" id="servo_up-button">Servo Up</button>
+				<button class="btn btn-primary btn-lg m-1" type="submit" id="servo_up-button">Servo Up</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_down/">
-				<button class="btn btn-primary btn-lg m-1" type="button" id="servo_down-button">Servo Down</button>
+				<button class="btn btn-primary btn-lg m-1" type="submit" id="servo_down-button">Servo Down</button>
 			</form>
 		</div>
 
@@ -38,13 +38,13 @@
 						Large
 						</option>
 					</select> 
-					<input type="button" name="submit_button" accept = ".pdf" value="Upload Image">
+					<input type="submit" name="submit_button" accept = ".pdf" value="Upload Image">
 				</div>
 			</form>
 
 			<form class="m-2" method="post" enctype="multipart/form-data">
 				<input type="file" name="file2">
-				<input type="button" accept = ".pdf" name="submit_button" value="Upload PDF">
+				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
 			</form>
 		</div>
 		<div class="col-4">
