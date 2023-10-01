@@ -42,7 +42,9 @@ document.getElementById('inputfile').addEventListener('change', function() {
 	if(file.type === "text/x.gcode"){
 		fr.onload = function(){
 			let result = fr.result;
+			gcodeFile = fr.result;
 			preview.processGCode(result);
+			handleGcodeFile();
 		}
 		fr.readAsText(file);
 	}else if(
@@ -53,10 +55,10 @@ document.getElementById('inputfile').addEventListener('change', function() {
 		fr.onload = function(){
 			let result = fr.result;
 
-			const img = document.querySelector('img');	
+			const img = document.createElement('img');	
 			img.src = result;
 
-			img.onload = function(){
+			img.onload = async function(){
 				const canvas = document.createElement("canvas");
 				const ctx = canvas.getContext("2d");
 
@@ -65,9 +67,29 @@ document.getElementById('inputfile').addEventListener('change', function() {
 
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 				const dataURI = canvas.toDataURL();
-				img.src = dataURI;
+				document.querySelector('img').src = dataURI;
+
+				const res = await fetch(dataURI);
+				imageFile = await res.blob();
+				handleImageFile();
 			}
 		}
 		fr.readAsDataURL(file);
 	}
 });
+
+
+function handleGcodeFile(){
+	// Add functionality to send gcode to server
+	console.log(gcodeFile);
+}
+
+function handleSvgFile(){
+	// Add functionality to convert svg to gcode and then handle
+	console.log(svgFile);
+}
+
+function handleImageFile(){
+	// Add functionality to convert to svg and then handle
+	console.log(imageFile);
+}
