@@ -52,9 +52,6 @@ document.getElementById('inputfile').addEventListener('change', function() {
 	){
 		fr.onload = function(){
 			let result = fr.result;
-			console.log(result);
-			console.log("Image selected");
-			console.log(file);
 
 			const img = document.querySelector('img');	
 			img.src = result;
