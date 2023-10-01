@@ -2,9 +2,10 @@
 
 {% block body %}
 <div class="page-container">
-	<canvas style="width: 100vh; height: 100vh;"></canvas>
-	<button>Load</button>
-	<div class="bg-black rounded markdown-body p-2" style="width: 30vw; height: 60vh; overflow: scroll;" id="markdown"></div>
+	<section class="w-100 row" style="height: 60vh;">
+		<div class="bg-black rounded markdown-body p-2 col-4" style="overflow: scroll;" id="markdown"></div>
+		<canvas class="col-8" style="height: 60vh;"></canvas>
+	</section>
 	<!-- Control-Starts -->
 	<section class="w-100 bg-secondary-subtle rounded row" style="height: 40vh;">
 		<div class="col-4 align-middle p-4">
