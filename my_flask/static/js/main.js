@@ -82,14 +82,26 @@ document.getElementById('inputfile').addEventListener('change', function() {
 function handleGcodeFile(){
 	// Add functionality to send gcode to server
 	console.log(gcodeFile);
+
+	// Send 'gcodeFile' to backend
 }
 
 function handleSvgFile(){
 	// Add functionality to convert svg to gcode and then handle
+	
 	console.log(svgFile);
+	// gcodeFile = <DO CONVERSION>
+	//
+	// Possibly use svg2gcode library - wasm
+	handleGcodeFile();
 }
 
 function handleImageFile(){
 	// Add functionality to convert to svg and then handle
+
 	console.log(imageFile);
+	// svgFile = <DO CONVERSION>
+	// 
+	// Possibly use bitmap2vector library - javascript
+	handleSvgFile()
 }
