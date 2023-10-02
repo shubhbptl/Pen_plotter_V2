@@ -1,25 +1,29 @@
 {% extends 'base.html' %}
 
 {% block body %}
+<img></img>
 <div class="page-container">
-	<div class="bg-black rounded markdown-body p-2" style="width: 30vw; height: 60vh; overflow: scroll;" id="markdown"></div>
+	<section class="w-100 row m-0" style="height: 70vh;">
+		<div class="bg-black rounded markdown-body p-2 col-4" style="overflow: scroll;" id="markdown"></div>
+		<canvas class="col-8" style="height: 70vh;"></canvas>
+	</section>
 	<!-- Control-Starts -->
-	<section class="w-100 bg-secondary-subtle rounded row" style="height: 40vh;">
-		<div class="col-4 align-middle p-4">
+	<section class="w-100 bg-secondary-subtle rounded row" style="height: 30vh;">
+		<div class="col-4 align-middle p-0 px-3">
 			<form class="m-2 d-grid" action="/homing/">
-				<button class="btn btn-primary btn-lg m-1" type="submit">Home Pen Plotter</button>
+				<button class="btn btn-primary m-1" type="submit">Home Pen Plotter</button>
 			</form>
 			<form class="m-2 d-grid" action="/reset_alarm/">
-				<button class="btn btn-primary btn-lg m-1" type="submit">Reset Alarm</button>
+				<button class="btn btn-primary m-1" type="submit">Reset Alarm</button>
 			</form>
 			<form class="m-2 d-grid" action="/Print/">
-				<button class="btn btn-primary btn-lg m-1" type="submit">Print</button>
+				<button class="btn btn-primary m-1" type="submit">Print</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_up/">
-				<button class="btn btn-primary btn-lg m-1" type="submit" id="servo_up-button">Servo Up</button>
+				<button class="btn btn-primary m-1" type="submit" id="servo_up-button">Servo Up</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_down/">
-				<button class="btn btn-primary btn-lg m-1" type="submit" id="servo_down-button">Servo Down</button>
+				<button class="btn btn-primary m-1" type="submit" id="servo_down-button">Servo Down</button>
 			</form>
 		</div>
 
@@ -46,13 +50,20 @@
 				<input type="file" name="file2">
 				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
 			</form>
+			<form>
+				<br/>
+				<br/>
+				<br/>
+				<p>Upload gcode file</p>
+				<input type="file" id="inputfile"></input>
+			</form>
 		</div>
 		<div class="col-4">
-		{% for message in get_flashed_messages() %}
-		<div class="alert alert-danger">
-			{{ message }}
-		</div>
-		{% endfor %} 
+			{% for message in get_flashed_messages() %}
+			<div class="alert alert-danger">
+				{{ message }}
+			</div>
+			{% endfor %} 
 		</div>
 
 	</section>
