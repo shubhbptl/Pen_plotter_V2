@@ -18,7 +18,7 @@ const preview = (window.preview = new GCodePreview.init({
 	buildVolume: {x: 150, y: 150, z: 150},
 	initialCameraPosition: [0,400,450],
 	//debug: true,
-	allowDragNDrop: false,
+	allowDragNDrop: true,
 }));  // draw a diagonal line
 preview.renderTravel = true
 const gcode = ''; 
@@ -39,7 +39,7 @@ let imageFile;
 document.getElementById('inputfile').addEventListener('change', function() {
 	let file = this.files[0];
 	let fr = new FileReader();
-	if(file.type === "text/x.gcode"){
+	if(file.type === "text/x.gcode" || file.type === ""){
 		fr.onload = function(){
 			let result = fr.result;
 			gcodeFile = fr.result;

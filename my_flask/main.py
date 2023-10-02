@@ -15,7 +15,7 @@ app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
 app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")
 app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")
-
+cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")
 
 
 def allowed_file(filename, allowed_extensions):
@@ -69,9 +69,7 @@ def home():
                         ]
                     )
                 # Convert SVG to GCODE
-                subprocess.run(["vpype","read",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "write","--page-size","a4","--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
-                subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
-                
+                    subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "-o",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))]);                
                 flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
