@@ -37,11 +37,11 @@ def home():
                 img = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 
                 if size == "small":
-                    img_resize_lanczos = img.resize((783, 1123), Image.LANCZOS)
-                elif size == "medium":
-                    img_resize_lanczos = img.resize((150, 150), Image.LANCZOS)
-                elif size == "large":
                     img_resize_lanczos = img.resize((200, 200), Image.LANCZOS)
+                elif size == "medium":
+                    img_resize_lanczos = img.resize((400, 400), Image.LANCZOS)
+                elif size == "large":
+                    img_resize_lanczos = img.resize((600, 600), Image.LANCZOS)
 
                 resized_filename = "resized_" + secure_filename(file.filename)
                 
@@ -49,27 +49,9 @@ def home():
                     os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
                 )
                 for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
-                    subprocess.run(
-                        [
-                            "convert",
-                            os.path.join(app.config["UPLOAD_FOLDER"], file.filename),
-                            "-threshold",
-                            "50%",
-                            "-background",
-                            "white",
-                            "-alpha",
-                            "remove",
-                            "-negate",
-                            (
-                                os.path.join(
-                                    app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"
-                                )
-                                
-                            ),
-                        ]
-                    )
+                    subprocess.run(["vtracer","--input",(os.path.join(app.config["UPLOAD_FOLDER"],file.filename)), "--output", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
                 # Convert SVG to GCODE
-                    subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "-o",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))]);                
+                    subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "-o",(os.path.join(app.config["GCODE_FOLDER"], resized_filename[:-4]+ ".gcode"))]);                
                 flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
