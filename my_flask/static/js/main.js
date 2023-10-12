@@ -15,24 +15,21 @@ document.querySelector('#markdown').innerHTML = html;
 const preview = (window.preview = new GCodePreview.init({
 	canvas: document.querySelector('canvas'),
 	lineWidth: 4,
-	buildVolume: { x: 150, y: 150, z: 150 },
+	buildVolume: { x: 280, y: 210, z: 150 },
 	initialCameraPosition: [0, 400, 450],
 	//debug: true,
 	allowDragNDrop: true,
 }));  // draw a diagonal line
 preview.renderTravel = true
 let gcode = await fetch('/static/Image_Storage/Gcodes/previous.gcode');
-gcode = await gcode.text(
-
-	
-);
+gcode = await gcode.text();
 console.log(gcode);
 preview.processGCode(gcode);
 
 
 
 /*	The following code handle the selection of files,
-*	if the file is an image it first converts it to 
+*	if the file is an image it first converts it to
 *	gcode and is thus later able to directly send the
 *	gcode file to the server.
 */
@@ -50,6 +47,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 			gcodeFile = fr.result;
 			preview.processGCode(result);
 			handleGcodeFile();
+
 		}
 		fr.readAsText(file);
 	} else if (
@@ -69,7 +67,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				var val = document.getElementById('Size').value;
 				if (val == "small") {
 					canvas.width = 200;
-					canvas.height = 150;
+					canvas.height = 200;
 				} else if (val == "medium") {
 					canvas.width = 400;
 					canvas.height = 300;
@@ -83,7 +81,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 
 				const res = await fetch(dataURI);
 				imageFile = await res.blob();
-				imageFile = new File([imageFile], "image.png")
+				imageFile = new File([imageFile], file.name)
 				handleImageFile();
 			}
 		}
@@ -93,6 +91,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 
 
 function handleGcodeFile() {
+
 	// Add functionality to send gcode to server
 	console.log(gcodeFile);
 
@@ -101,7 +100,6 @@ function handleGcodeFile() {
 
 function handleSvgFile() {
 	// Add functionality to convert svg to gcode and then handle
-
 	console.log(svgFile);
 	// gcodeFile = <DO CONVERSION>
 	//
@@ -123,11 +121,13 @@ function handleImageFile() {
 	request.open("POST", "/");
 	request.send(formData);
 
-
-
-
 	// svgFile = <DO CONVERSION>
-	// 
+	//
 	// Possibly use bitmap2vector library - javascript
 	handleSvgFile()
+
+	// setTimeout(function(){
+	// 	location.replace(location.href);
+	// }, 3000);
+
 }

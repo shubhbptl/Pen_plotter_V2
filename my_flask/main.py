@@ -31,7 +31,7 @@ def home():
             print("Made it to Upload Image")
             file = request.files["file1"]
             print(file)
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp", "webp"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "bmp"]):
                 print("Made it to allowed_file")
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
@@ -39,7 +39,27 @@ def home():
                     os.remove(f)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
                 resized_filename = file.filename
-                subprocess.run(["vtracer","--input",(os.path.join(app.config["UPLOAD_FOLDER"],file.filename)), "--mode","spline","--output", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
+                subprocess.run(
+                        [
+                            "convert",
+                            (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
+                            "-threshold",
+                            "50%",
+                            "-background",
+                            "white",
+                            "-alpha",
+                            "remove",
+                            "-negate",
+                            
+                            (
+                                os.path.join(
+                                    app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"
+                                )
+                                
+                            ),
+                        ]
+                )
+
                 # Convert SVG to GCODE
                 subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]);                
                 flash("Image has been Uploaded and Converted successfully.")
@@ -53,10 +73,8 @@ def home():
                     os.remove(f)
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
-                for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
-                    subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
-                for i in tqdm(range(100), desc="Converting image to SVG: ", leave=True):
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode"))])
+                subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
@@ -220,6 +238,9 @@ def reset_alarm():
     flash(f"Alarm reset response: {response}")
     ser.close()
     return redirect("/")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=True)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

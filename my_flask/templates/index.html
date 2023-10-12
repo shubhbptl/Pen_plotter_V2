@@ -30,7 +30,11 @@
 		<div class="col-4">
 			<form class="m-2" method="post" enctype="multipart/form-data">
 				<div>
-					<input type="file" name="file1"> 
+					<form>
+						<strong>PNG FILE ONLY</strong>
+						<br>
+						<input type="file" id="inputfile"></input>
+					</form>
 					<select id = "Size" name="size_selector">
 						<option value="small">
 						Small
@@ -42,20 +46,14 @@
 						Large
 						</option>
 					</select> 
-					<input type="submit" name="submit_button" value="upload_image">
 				</div>
 			</form>
 
 			<form class="m-2" method="post" enctype="multipart/form-data">
+				<strong>PDF FILE ONLY</strong>
+				<br>
 				<input type="file" name="file2">
 				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
-			</form>
-			<form>
-				<br/>
-				<br/>
-				<br/>
-				<p>Upload gcode file</p>
-				<input type="file" id="inputfile"></input>
 			</form>
 		</div>
 		<div class="col-4">
