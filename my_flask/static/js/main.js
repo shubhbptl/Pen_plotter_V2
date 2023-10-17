@@ -77,7 +77,6 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				}
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 				const dataURI = canvas.toDataURL();
-				document.querySelector('img').src = dataURI;
 
 				const res = await fetch(dataURI);
 				imageFile = await res.blob();
@@ -118,6 +117,7 @@ function handleImageFile() {
 	formData.append("submit_button", "upload_image")
 
 	const request = new XMLHttpRequest();
+	request.onload = function(){location.reload()}
 	request.open("POST", "/");
 	request.send(formData);
 
@@ -126,8 +126,8 @@ function handleImageFile() {
 	// Possibly use bitmap2vector library - javascript
 	handleSvgFile()
 
-	// setTimeout(function(){
-	// 	location.replace(location.href);
-	// }, 3000);
+	//  setTimeout(function(){
+	//  	location.replace(location.href);
+	//  }, 3000);
 
 }
