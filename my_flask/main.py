@@ -12,11 +12,14 @@ import time
 
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")
-app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")
-cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")
-setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json")
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder 
+app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")      # save all Pdf uploaded
+cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")     # converter for images to gcode 
+setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter 
+current_Gcode = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/previous.gcode" # location to current gcode file
+logo_filename = "/home/penplotter/Pen_plotter_V2/my_flask/Testing_Folder/mvths engineering (2).gcode" # location to small sketch needed for paper roller sensor that get added to current gcode file.
+
 
 
 def allowed_file(filename, allowed_extensions):
@@ -38,6 +41,7 @@ def home():
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
                     os.remove(f)
+                # converts png images to svg
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
                 resized_filename = file.filename
                 subprocess.run(
@@ -47,7 +51,7 @@ def home():
                             "-gravity",
                             "East",
                             "-extent",
-                            "110%x100%",
+                            "105%x100%",
                             "-threshold",
                             "50%",
                             "-background",
@@ -55,7 +59,6 @@ def home():
                             "-alpha",
                             "remove",
                             "-negate",
-                            
                             (
                                 os.path.join(
                                     app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"
@@ -64,24 +67,38 @@ def home():
                             ),
                         ]
                 )
+                # convert svg to gcode
+                subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")),  "--settings", setting, "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]); 
+                    # add small gcode to current gcode after it has been uploaded
+                with open(logo_filename, 'r') as f:
+                    data = f.read()
+                    f.close()
 
-                # Convert SVG to GCODE
-                #subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
-                subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")),  "--settings", setting, "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]);                
+                with open(current_Gcode, 'r') as f:
+                    old_data = f.read()
+                    f.close()
+
+                with open(current_Gcode, 'w') as f:
+                    f.write(data)
+                    f.write(old_data)
+                    f.close()               
                 
                 flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
+            # converts PDF to gcode
         elif submit_button == "Upload PDF":
             file = request.files["file2"]
             if file and allowed_file(file.filename, ["pdf"]):
+                # remove any previous pdf before uploading new pdf
                 prev_images = glob.glob(app.config["TEXT_FOLDER"] + '/*')
                 for f in prev_images:
                     os.remove(f)
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
-                #subprocess.run(["pdf2svg",(os.path.join(app.config["TEXT_FOLDER"], filename)),(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                # converts pdf to svg
                 subprocess.run(["pdftocairo",(os.path.join(app.config["TEXT_FOLDER"], filename)),"-paperh","900","-paperw","800","-expand","-svg",(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                # converts svg to gcode
                 subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
@@ -170,7 +187,7 @@ def Print():
         flash("firmware uploaded")
     except FileNotFoundError:
         flash(f"File {firmware_file} not uploaded")
-    filename = os.path.join(app.config["GCODE_FOLDER"], "pervious.gcode")
+    filename = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")
     try:
         for i in tqdm(range(100), desc="uploading gcode: ", leave=True):
             with open(filename, 'r') as f:
@@ -249,6 +266,3 @@ def reset_alarm():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)

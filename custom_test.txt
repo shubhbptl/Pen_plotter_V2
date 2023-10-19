@@ -17,3 +17,7 @@ invert_y = true
 
 # from home
 .local/pipx/venvs/vpype/lib/python3.10/site-packages/vpype_gcode/bundled_configs.toml
+
+install pdftocairo
+RUN wget --directory-prefix=~ poppler.freedesktop.org/poppler-22.04.0.tar.xz -O /tmp/poppler-22.04.0.tar.xz && apt-get install xz-utils && tar xf /tmp/poppler-22.04.0.tar.xz -C /tmp && cd /tmp/poppler-22.04.0 && ls && mkdir build && cd build && apt-get -y install libfreetype6-dev && apt-get -y install pkg-config && apt-get -y install libfontconfig1-dev && apt-get -y install libjpeg-dev && apt-get -y install libopenjp2-7-dev && apt-get -y install build-essential cmake && cmake -DENABLE_BOOST=OFF .. && make && make install 
+pdftocairo -v

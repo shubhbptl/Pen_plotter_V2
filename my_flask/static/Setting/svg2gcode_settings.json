@@ -1,8 +1,8 @@
 {
   "conversion": {
     "tolerance": 0.002,
-    "feedrate": 2500.0,
-    "dpi": 100.0,
+    "feedrate": 2000.0,
+    "dpi": 96.0,
     "origin": [
       0.0,
       0.0
@@ -14,7 +14,7 @@
     },
     "tool_on_sequence": "M3 s175\nG4 P0.2",
     "tool_off_sequence": "M3 s150\nG4 P0.2",
-    "begin_sequence": "M3 s150\nG92 X0 Y0",
+    "begin_sequence": "M3 s150",
     "end_sequence": "M3 s150\nG1 X0 Y0"
   },
   "postprocess": {
