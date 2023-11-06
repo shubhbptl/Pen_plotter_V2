@@ -12,10 +12,10 @@
     "supported_functionality": {
       "circular_interpolation": true
     },
-    "tool_on_sequence": "M3 s175\nG4 P0.2",
-    "tool_off_sequence": "M3 s150\nG4 P0.2",
-    "begin_sequence": "M3 s150",
-    "end_sequence": "M3 s150\nG1 X0 Y0"
+    "tool_on_sequence": "M3 s10\nG4 P0.2",
+    "tool_off_sequence": "M3 s30\nG4 P0.2",
+    "begin_sequence": "M3 s30",
+    "end_sequence": "M3 s30\nG1 X0 Y0"
   },
   "postprocess": {
     "origin": [

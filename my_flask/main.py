@@ -4,26 +4,30 @@ from subprocess import run
 import subprocess
 import os
 import glob
-from PIL import Image
-from tqdm import tqdm
 import serial
-
 import time
 
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder 
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder
 app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")      # save all Pdf uploaded
-cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")     # converter for images to gcode 
-setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter 
+cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")     # converter for images to gcode
+setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter
 current_Gcode = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/previous.gcode" # location to current gcode file
 logo_filename = "/home/penplotter/Pen_plotter_V2/my_flask/Testing_Folder/mvths engineering (2).gcode" # location to small sketch needed for paper roller sensor that get added to current gcode file.
-
+firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware.txt'
 
 
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
+
+port = '/dev/ttyUSB0'
+baud = 115200
+
+
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -63,12 +67,12 @@ def home():
                                 os.path.join(
                                     app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"
                                 )
-                                
+
                             ),
                         ]
                 )
                 # convert svg to gcode
-                subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")),  "--settings", setting, "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]); 
+                subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")),  "--settings", setting, "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]);
                     # add small gcode to current gcode after it has been uploaded
                 with open(logo_filename, 'r') as f:
                     data = f.read()
@@ -81,8 +85,8 @@ def home():
                 with open(current_Gcode, 'w') as f:
                     f.write(data)
                     f.write(old_data)
-                    f.close()               
-                
+                    f.close()
+
                 flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
@@ -107,22 +111,22 @@ def home():
     return render_template('index.html')
 
 
+
 @app.route("/servo_up/")
 def servo_up():
-    port = '/dev/ttyUSB0'
-    baud = 115200
     try:
-        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
-            ser = serial.Serial(port, baud)
+        ser = serial.Serial(port, baud, dsrdtr = True)
         flash(f"Connected to {port}")
+        ser.write(('$X\n').encode())
+        flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
-        return redirect('/')
-        
-    time.sleep(2)
     try:
-        for i in tqdm(range(100), desc="servo motor off: ", leave=True):
-            ser.write(b'M03 S190;\n'.encode())
+        # ser.write('\r\n\r\n'.encode())
+        # time.sleep(2)
+        # ser.flushInput()
+        servoup = 'm3 s10' + '\n'
+        ser.write(servoup.encode())
         flash("Servo down command sent")
     except Exception as e:
         flash(f"Failed to send servo down command: {e}")
@@ -132,24 +136,24 @@ def servo_up():
         pass
     response = ser.readline()
     flash(f"Servo up response: {response}")
-    ser.close() 
+    ser.close()
     return redirect('/')
 
 @app.route("/servo_down/")
 def servo_down():
-    port = '/dev/ttyUSB0'
-    baud = 115200
     try:
-        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
-            ser = serial.Serial(port, baud)
+        ser = serial.Serial(port, baud, dsrdtr = True)
         flash(f"Connected to {port}")
+        ser.write(('$X\n').encode())
+        flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
-        return redirect('/')
-    time.sleep(2)
     try:
-        for i in tqdm(range(100), desc="servo motor on: ", leave=True):
-            ser.write(('M03 S150;\n').encode())
+        ser.write('\r\n\r\n'.encode())
+        time.sleep(0.1)
+        ser.flushInput()
+        servoDown = 'm3 s30' + '\n'
+        ser.write(servoDown.encode())
         flash("Servo up command sent")
     except Exception as e:
         flash(f"Failed to send servo up command: {e}")
@@ -164,39 +168,24 @@ def servo_down():
 
 @app.route("/Print/")
 def Print():
-    port = '/dev/ttyUSB0'
-    baud = 115200
-    firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware_onlykeys.txt'
-    
+    filename = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")
+    f = open(filename, 'r');
     try:
-        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
-            ser = serial.Serial(port, baud)
+        ser = serial.Serial(port, baud, dsrdtr = True)
         flash(f"Connected to {port}")
+        ser.write(('$X\n').encode())
+        flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
-        return redirect('/')
-    time.sleep(2)
+    
     try:
-        for i in tqdm(range(100), desc="uploading firmware: " , leave=True):
-            with open(firmware_file, 'r') as f:
-                for line in f:
-                    line = line.split(";")[0]
-                    ser.write((line + '\n').encode())
-                    while ser.in_waiting == 0:
-                        pass
-        flash("firmware uploaded")
-    except FileNotFoundError:
-        flash(f"File {firmware_file} not uploaded")
-    filename = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")
-    try:
-        for i in tqdm(range(100), desc="uploading gcode: ", leave=True):
-            with open(filename, 'r') as f:
-                for line in f:
-                    line = line.split(';')[0]
-                    ser.write((line + '\n').encode())
-                    while ser.in_waiting == 0:
-                        pass
-        flash("Gcode Uploaded")
+        for line in f:
+            l = line.strip() # Strip all EOL characters for streaming
+            print('Sending: ' + l,)
+            ser.write((l + '\n').encode()) # Send g-code block to grbl
+            grbl_out = ser.readline() # Wait for grbl response with carriage return
+            grbl_out_str=str(grbl_out)
+            print(' : ' + grbl_out_str)
     except FileNotFoundError:
         flash(f"File {filename} not found")
         ser.close()
@@ -205,25 +194,23 @@ def Print():
         flash("Failed to upload G-code file")
         ser.close()
         return redirect('/')
+    ser.write(('$H\n').encode())
+    flash("Gcode Uploaded")
     ser.close()
     return redirect("/")
 
 
 @app.route("/homing/")
 def homing():
-    port = '/dev/ttyUSB0'
-    baud = 115200
     try:
-        for i in tqdm(range(100), desc="connecting to the port : ", leave=True):
-            ser = serial.Serial(port, baud)
+        ser = serial.Serial(port, baud, dsrdtr = True)
         flash(f"Connected to {port}")
+       # ser.write(('$X\n').encode())
+       # flash("Alarm Unlocked")
     except serial.SerialException:
-        flash(f"Failed to connect to {port}")
-        return redirect('/')
-    time.sleep(2)
+      flash(f"Failed to connect to {port}")
     try:
-        for i in tqdm(range(100), desc="homing the plotter: ", leave=True):
-            ser.write(('$H\n').encode())
+        ser.write(('$H\n').encode())
         flash("Homing command sent")
     except Exception as e:
         flash(f"Failed to send homing command: {e}")
@@ -239,19 +226,15 @@ def homing():
 
 @app.route("/reset_alarm/")  # press this button if the plotter stops
 def reset_alarm():
-    port = '/dev/ttyUSB0'
-    baud = 115200
     try:
-        for i in tqdm(range(100), desc="connecting to the port: ", leave=True):
-            ser = serial.Serial(port, baud)
+        ser = serial.Serial(port, baud, dsrdtr = True)
         flash(f"Connected to {port}")
+        ser.write(('$X\n').encode())
+        flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
-        return redirect('/')
-    time.sleep(2)
     try:
-        for i in tqdm(range(100), desc="reseting alarm: ", leave=True):
-            ser.write(('$X\n').encode())
+        ser.write(('$X\n').encode())
         flash("Alarm reset command sent")
     except Exception as e:
         flash(f"Failed to send alarm reset command: {e}")

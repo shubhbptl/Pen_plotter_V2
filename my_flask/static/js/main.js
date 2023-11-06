@@ -66,14 +66,14 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				const ctx = canvas.getContext("2d");
 				var val = document.getElementById('Size').value;
 				if (val == "small") {
-					canvas.width = 200;
-					canvas.height = 200;
+					canvas.width = 500;
+					canvas.height = 500;
 				} else if (val == "medium") {
-					canvas.width = 400;
-					canvas.height = 300;
+					canvas.width = 1000;
+					canvas.height = 1000;
 				} else if (val == "large") {
-					canvas.width = 800;
-					canvas.height = 600;
+					canvas.width = 1500;
+					canvas.height = 1500;
 				}
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 				const dataURI = canvas.toDataURL();
