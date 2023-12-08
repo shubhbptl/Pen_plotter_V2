@@ -1,4 +1,4 @@
-22754492832459137
+22752793201810498
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -62503,12 +62503,26 @@ Yellow 5381 Series LED
 2
 2
 Main Library
+DC_MOTOR_DRIVER
+
+
+0
+10
+10
+Main Library
 DRV8825
 
 
 0
 16
 16
+Main Library
+L7805
+
+
+0
+3
+3
 Main Library
 LM393AN
 
@@ -62530,34 +62544,13 @@ RASPBERRY_PI_3_MODEL_B_
 0
 48
 48
-Main Pcb
-IC_DRV8825_STEPPER_MOTOR_DRIVER_CARRIER
+Main Library
+VOLTAGE LEVEL SHIFTER CONVERTER
 
 
 0
-16
-16
-Main Pcb
-MODULE_2590
-
-
-0
-28
-28
-Main Pcb
-MODULE_2590_copy
-
-
-0
-28
-28
-Main Pcb
-MODULE_RASPBERRY_PI_3_MODEL_B_
-
-
-0
-48
-48
+12
+12
 Module
 A20_OLINUXINO_LIME2
 A20 Olinuxino LIME2, 1.2GHz, 512-1024MB RAM, Micro-SD, NAND or eMMC, 1000Mbit Ethernet
