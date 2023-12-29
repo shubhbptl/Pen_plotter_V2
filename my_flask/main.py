@@ -5,20 +5,20 @@ import subprocess
 import os
 import glob
 from PIL import Image
-from tqdm import tqdm
 import serial
 
 import time
 
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder 
-app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")      # save all Pdf uploaded
-cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")     # converter for images to gcode 
-setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter 
-current_Gcode = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/previous.gcode" # location to current gcode file
-logo_filename = "/home/penplotter/Pen_plotter_V2/my_flask/Testing_Folder/mvths engineering (2).gcode" # location to small sketch needed for paper roller sensor that get added to current gcode file.
+# app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
+app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder 
+app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Text")      # save all Pdf uploaded
+cargo = os.path.join(app.root_path,"/home/shubh/Pen_plotter_V2/my_flask/svg2gcode/svg2gcode")     # converter for images to gcode 
+setting = os.path.join(app.root_path,"/home/shubh/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter 
+current_Gcode = "/home/shubh/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/previous.gcode" # location to current gcode file
+logo_filename = "/home/shubh/Pen_plotter_V2/my_flask/Testing_Folder/mvths engineering (2).gcode" # location to small sketch needed for paper roller sensor that get added to current gcode file.
 
 
 

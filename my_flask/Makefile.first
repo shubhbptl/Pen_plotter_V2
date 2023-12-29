@@ -1,0 +1,9 @@
+.DEFAULT_GOAL := run
+
+setup: requirement.txt
+requirement.txt: ./my_flask/requirements.txt
+	pip install -r requirements.txt
+
+run: setup
+	python main.py
+
