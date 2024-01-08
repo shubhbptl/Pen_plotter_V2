@@ -14,20 +14,18 @@ motor.start(0)
 
 
 while True:
-    
     sensor = GPIO.input(sensor1)
     GPIO.output(motor_Direction,GPIO.LOW)
     motor.ChangeDutyCycle(100)
-    time.sleep(1.5)
-    if sensor == 0:
+    # time.sleep(1.5)
+    if sensor == 1:
         GPIO.output(motor_Direction,GPIO.LOW)
         motor.ChangeDutyCycle(100)
-        time.sleep(1.5)
-        break
+        print(sensor)
     else:
         time.sleep(1)
         GPIO.output(motor_Direction,GPIO.LOW)
         motor.ChangeDutyCycle(0)
-    time.sleep(0.1)
-    print(sensor)
-    break
+        time.sleep(0.1)
+        print(sensor)
+        break

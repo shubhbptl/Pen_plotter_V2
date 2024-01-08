@@ -66,14 +66,14 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				const ctx = canvas.getContext("2d");
 				var val = document.getElementById('Size').value;
 				if (val == "small") {
-					canvas.width = 500;
-					canvas.height = 500;
+					canvas.width = 350;
+					canvas.height = 300;
 				} else if (val == "medium") {
-					canvas.width = 1000;
-					canvas.height = 1000;
+					canvas.width = 600;
+					canvas.height = 500;
 				} else if (val == "large") {
-					canvas.width = 1500;
-					canvas.height = 1500;
+					canvas.width = 720;
+					canvas.height = 570;
 				}
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 				const dataURI = canvas.toDataURL();
@@ -115,6 +115,7 @@ function handleImageFile() {
 	const formData = new FormData();
 	formData.append("file1", imageFile);
 	formData.append("submit_button", "upload_image")
+	formData.append("design_selector", document.querySelector("#Design").value)
 
 	const request = new XMLHttpRequest();
 	request.onload = function(){location.reload()}
