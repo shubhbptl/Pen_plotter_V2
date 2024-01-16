@@ -13,29 +13,41 @@ GPIO.setwarnings(False)
 motor_PWM = 18
 sensor1 = 14
 motor_Direction = 15
-GPIO.setup(motor_PWM,GPIO.OUT)
-GPIO.setup(sensor1,GPIO.IN)
-GPIO.setup(motor_Direction,GPIO.OUT)
-motor = GPIO.PWM(motor_PWM,100)
+GPIO.setup(motor_PWM, GPIO.OUT)
+GPIO.setup(sensor1, GPIO.IN)
+GPIO.setup(motor_Direction, GPIO.OUT)
+motor = GPIO.PWM(motor_PWM, 100)
 motor.start(0)
 
 app = Flask(__name__, static_folder="static",)
 app.config["SECRET_KEY"] = "Gooseberry"
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Images")  # saves all images uploaded
-app.config["GCODE_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes")   # saves all gcode converted from images and text folder
-app.config["TEXT_FOLDER"] = os.path.join(app.root_path, "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Text")      # save all Pdf uploaded
-cargo = os.path.join(app.root_path,"/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")     # converter for images to gcode
-setting = os.path.join(app.root_path,"/home/penplotter/Pen_plotter_V2/my_flask/static/Setting/svg2gcode_settings.json") # some required gcode parameter for this specific plotter
-current_Gcode = "/home/penplotter/Pen_plotter_V2/my_flask/static/Image_Storage/Gcodes/previous.gcode" # location to current gcode file
-logo_filename = "/home/penplotter/Pen_plotter_V2/my_flask/static/Logo/logo.gcode" # location to small sketch needed for paper roller sensor that get added to current gcode file.
-firmware_file = '/home/penplotter/Pen_plotter_V2/my_flask/UI_Buttons_Bash/firmware.txt'
+app.config["UPLOAD_FOLDER"] = os.path.join(
+    app.root_path, "static/Image_Storage/Images")  # saves all images uploaded
+# saves all gcode converted from images and text folder
+app.config["GCODE_FOLDER"] = os.path.join(
+    app.root_path, "static/Image_Storage/Gcodes")
+app.config["TEXT_FOLDER"] = os.path.join(
+    app.root_path, "static/Image_Storage/Text")      # save all Pdf uploaded
+# converter for images to gcode
+cargo = os.path.join(
+    app.root_path, "/home/penplotter/Documents/svg2gcode/target/debug/svg2gcode")
+# some required gcode parameter for this specific plotter
+setting = os.path.join(
+    app.root_path, "static/Setting/svg2gcode_settings.json")
+# location to current gcode file
+current_Gcode = "static/Image_Storage/Gcodes/previous.gcode"
+# location to small sketch needed for paper roller sensor that get added to current gcode file.
+logo_filename = "static/Logo/logo.gcode"
+firmware_file = 'UI_Buttons_Bash/firmware.txt'
 
 
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
+
 port = '/dev/ttyUSB0'
 baud = 115200
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -56,14 +68,16 @@ def home():
                 for f in prev_images:
                     os.remove(f)
                 # converts png images to svg
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
+                file.save(os.path.join(
+                    app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
                 resized_filename = file.filename
                 if design == "normal":
                     print("doing normal")
                     subprocess.run(
                         [
                             "convert",
-                            (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
+                            (os.path.join(
+                                app.config["UPLOAD_FOLDER"], file.filename)),
                             "-gravity",
                             "East",
                             "-extent",
@@ -82,19 +96,26 @@ def home():
 
                             ),
                         ]
-                )
+                    )
                 # convert svg to gcode
-                    subprocess.run([cargo,(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")),  "--settings", setting, "-o",(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))]);
+                    subprocess.run([cargo, (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
+                                   "--settings", setting, "-o", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 elif design == "diagonal":
                     print("doing diagonal")
-                    subprocess.run(["vpype", "hatched",(os.path.join(app.config["UPLOAD_FOLDER"], file.filename)), "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
-                    subprocess.run(["vpype", "read",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "write", "--page-size","10inx10in","--center",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                    subprocess.run(["vpype", "hatched", (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
+                                   "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
+                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")), "write",
+                                   "--page-size", "10inx10in", "--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
+                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
+                                   "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 elif design == "spiral":
                     print("doing spiral")
-                    subprocess.run(["vpype", "hatched","-c",(os.path.join(app.config["UPLOAD_FOLDER"], file.filename)), "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
-                    subprocess.run(["vpype", "read",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "write", "--page-size","10inx10in","--center",(os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4]+ ".svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                    subprocess.run(["vpype", "hatched", "-c", (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
+                                   "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
+                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")), "write",
+                                   "--page-size", "10inx10in", "--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
+                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
+                                   "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                     # add small gcode to current gcode after it has been uploaded
                 with open(logo_filename, 'r') as f:
                     data = f.read()
@@ -123,9 +144,11 @@ def home():
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
                 # converts pdf to svg
-                subprocess.run(["pdftocairo",(os.path.join(app.config["TEXT_FOLDER"], filename)),"-expand","-svg",(os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg"))])
+                subprocess.run(["pdftocairo", (os.path.join(app.config["TEXT_FOLDER"], filename)), "-expand",
+                               "-svg", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg"))])
                 # converts svg to gcode
-                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4]+ "resized.svg")), "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg")),
+                               "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 flash("Text file has been Uploaded Successfully.")
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
@@ -133,11 +156,10 @@ def home():
     return render_template('index.html')
 
 
-
 @app.route("/servo_up/")
 def servo_up():
     try:
-        ser = serial.Serial(port, baud, dsrdtr = True)
+        ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
@@ -161,10 +183,11 @@ def servo_up():
     ser.close()
     return redirect('/')
 
+
 @app.route("/servo_down/")
 def servo_down():
     try:
-        ser = serial.Serial(port, baud, dsrdtr = True)
+        ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
@@ -188,12 +211,13 @@ def servo_down():
     ser.close()
     return redirect("/")
 
+
 @app.route("/Print/")
 def Print():
     filename = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")
-    f = open(filename, 'r');
+    f = open(filename, 'r')
     try:
-        ser = serial.Serial(port, baud, dsrdtr = True)
+        ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         time.sleep(1)
@@ -202,14 +226,14 @@ def Print():
         flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
-    
+
     try:
         for line in f:
-            l = line.strip() # Strip all EOL characters for streaming
+            l = line.strip()  # Strip all EOL characters for streaming
             print('Sending: ' + l,)
-            ser.write((l + '\n').encode()) # Send g-code block to grbl
-            grbl_out = ser.readline() # Wait for grbl response with carriage return
-            grbl_out_str=str(grbl_out)
+            ser.write((l + '\n').encode())  # Send g-code block to grbl
+            grbl_out = ser.readline()  # Wait for grbl response with carriage return
+            grbl_out_str = str(grbl_out)
             print(' : ' + grbl_out_str)
     except FileNotFoundError:
         flash(f"File {filename} not found")
@@ -225,16 +249,16 @@ def Print():
     # motor roller
     while True:
         sensor = GPIO.input(sensor1)
-        GPIO.output(motor_Direction,GPIO.LOW)
+        GPIO.output(motor_Direction, GPIO.LOW)
         motor.ChangeDutyCycle(100)
         time.sleep(0.5)
         if sensor == 1:
-            GPIO.output(motor_Direction,GPIO.LOW)
+            GPIO.output(motor_Direction, GPIO.LOW)
             motor.ChangeDutyCycle(100)
             print(sensor)
         else:
             time.sleep(0.7)
-            GPIO.output(motor_Direction,GPIO.LOW)
+            GPIO.output(motor_Direction, GPIO.LOW)
             motor.ChangeDutyCycle(0)
             time.sleep(0.1)
             print(sensor)
@@ -246,12 +270,12 @@ def Print():
 @app.route("/homing/")
 def homing():
     try:
-        ser = serial.Serial(port, baud, dsrdtr = True)
+        ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
        # ser.write(('$X\n').encode())
        # flash("Alarm Unlocked")
     except serial.SerialException:
-      flash(f"Failed to connect to {port}")
+        flash(f"Failed to connect to {port}")
     try:
         ser.write(('$H\n').encode())
         flash("Homing command sent")
@@ -270,7 +294,7 @@ def homing():
 @app.route("/reset_alarm/")  # press this button if the plotter stops
 def reset_alarm():
     try:
-        ser = serial.Serial(port, baud, dsrdtr = True)
+        ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
@@ -289,6 +313,7 @@ def reset_alarm():
     flash(f"Alarm reset response: {response}")
     ser.close()
     return redirect("/")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
