@@ -146,6 +146,9 @@ def home():
                 # converts pdf to svg
                 subprocess.run(["pdftocairo", (os.path.join(app.config["TEXT_FOLDER"], filename)), "-expand",
                                "-svg", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg"))])
+                # center the file
+                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg")), "translate", "2cm", "0in", "linemerge", "--tolerance", "0.1mm", "linesort", "linesimplify", "write",
+                                "--page-size", "14inx8.2in", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg"))])
                 # converts svg to gcode
                 subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg")),
                                "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
