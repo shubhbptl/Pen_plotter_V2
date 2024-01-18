@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="page-container">
+	<section class="w-100 row m-0" style="height: 70vh;">
+		<div class="bg-black rounded markdown-body p-2 col-4" style="overflow: scroll;" id="markdown"></div>
+		<canvas class="col-8" style="height: 70vh;"></canvas>
+	</section>
+	<!-- Control-Starts -->
+	<section class="w-100 bg-secondary-subtle rounded row" style="height: 30vh;">
+		<div class="col-4 align-middle p-0 px-3">
+			<form class="m-2 d-grid" action="/homing/">
+				<button class="btn btn-primary m-1" type="submit">Home Pen Plotter</button>
+			</form>
+			<form class="m-2 d-grid" action="/reset_alarm/">
+				<button class="btn btn-primary m-1" type="submit">Reset Alarm</button>
+			</form>
+			<form class="m-2 d-grid" action="/Print/">
+				<button class="btn btn-primary m-1" type="submit">Print</button>
+			</form>
+			<form class="m-2 d-grid" action="/servo_up/">
+				<button class="btn btn-primary m-1" type="submit" id="servo_up-button">Servo Up</button>
+			</form>
+			<form class="m-2 d-grid" action="/servo_down/">
+				<button class="btn btn-primary m-1" type="submit" id="servo_down-button">Servo Down</button>
+			</form>
+		</div>
+
+		<div class="col-4">
+			<form class="m-2" method="post" enctype="multipart/form-data">
+				<div>
+					<form>
+						<strong>PNG FILE ONLY</strong>
+						<br>
+						<input type="file" id="inputfile"></input>
+					</form>
+					<select id = "Size" name="size_selector">
+						<option value="small">
+						Small
+						</option>
+						<option value="medium">
+						Medium
+						</option>
+						<option value="large">
+						Large
+						</option>
+					</select> 
+					<select name="design_selector" id="Design">
+						<option value="spiral">
+							spiral
+						</option>
+						<option value="diagonal">
+							diagonal
+						</option>
+						<option value="normal">
+							normal
+						</option>
+					</select>
+				</div>
+			</form>
+
+			<form class="m-2" method="post" enctype="multipart/form-data">
+				<strong>PDF FILE ONLY</strong>
+				<br>
+				<input type="file" name="file2">
+				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
+			</form>
+		</div>
+		<div class="col-4">
+			{% for message in get_flashed_messages() %}
+			<div class="alert alert-danger">
+				{{ message }}
+			</div>
+			{% endfor %} 
+		</div>
+
+	</section>
+</div>
+{% endblock body %}

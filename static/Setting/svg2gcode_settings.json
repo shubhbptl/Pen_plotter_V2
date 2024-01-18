@@ -1,0 +1,26 @@
+{
+  "conversion": {
+    "tolerance": 0.002,
+    "feedrate": 2500.0,
+    "dpi": 96.0,
+    "origin": [
+      10.0,
+      10.0
+    ]
+  },
+  "machine": {
+    "supported_functionality": {
+      "circular_interpolation": false
+    },
+    "tool_on_sequence": "M3 s30\nG4 P0.2",
+    "tool_off_sequence": "M3 s10\nG4 P0.2",
+    "begin_sequence": "M3 s10",
+    "end_sequence": "M3 s10\nG1 X0 Y0"
+  },
+  "postprocess": {
+    "origin": [
+      10.0,
+      10.0
+    ]
+  }
+}
