@@ -10,17 +10,15 @@
   },
   "machine": {
     "supported_functionality": {
-      "circular_interpolation": false
+      "circular_interpolation": true
     },
-    "tool_on_sequence": "M3 s30\nG4 P0.2",
-    "tool_off_sequence": "M3 s10\nG4 P0.2",
+    "tool_on_sequence": "M3 s72\nG4 P0.3",
+    "tool_off_sequence": "M3 s10\nG4 P0.3",
     "begin_sequence": "M3 s10",
     "end_sequence": "M3 s10\nG1 X0 Y0"
   },
   "postprocess": {
-    "origin": [
-      10.0,
-      10.0
-    ]
+    "checksums": false,
+    "line_numbers": false
   }
 }

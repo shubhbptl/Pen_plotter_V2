@@ -3,11 +3,12 @@ from werkzeug.utils import secure_filename
 from subprocess import run
 import subprocess
 import os
+import requests
 import glob
 import serial
-
-
-app = Flask(__name__, static_folder="static",)
+import time
+import RPi.GPIO as GPIO
+app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(
     app.root_path, "static/Image_Storage/Images")  # saves all images uploaded
@@ -23,18 +24,43 @@ cargo = os.path.join(
 setting = os.path.join(
     app.root_path, "static/Setting/svg2gcode_settings.json")
 # location to current gcode file
-current_Gcode = "static/Image_Storage/Gcodes/previous.gcode"
+current_Gcode = "/home/penplotter/Pen_plotter_V2/static/Image_Storage/Gcodes/previous.gcode"
 # location to small sketch needed for paper roller sensor that get added to current gcode file.
 logo_filename = "static/Logo/logo.gcode"
 firmware_file = 'UI_Buttons_Bash/firmware.txt'
+hf2gcode = "/home/penplotter/Pen_plotter_V2/hf2gcode/src/hf2gcode"
 
 
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
-port = '/dev/ttyUSB0'
+port = '/dev/ttyAMA0'
 baud = 115200
+pin = 24
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(pin, GPIO.OUT)
+GPIO.output(pin, GPIO.HIGH)
+
+
+@app.route("/retrive", methods=["GET", "POST"])
+def retrive_gcode():
+    if 'gcode_file' not in request.files:
+        return 'No file part'
+    file = request.files['gcode_file']
+    if file.filename == '':
+        return 'No selected file'
+    if file:
+        # Convert the image to RGB mode if it's RGBA
+        if file.mode == 'RGBA':
+            file.convert('RGB')
+        # Save the processed image
+        filename = secure_filename(file.filename)
+        processed_image_path = os.path.join(
+            app.config["GCODE_FOLDER"], filename)
+        file.save(processed_image_path)
+    return None
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -44,6 +70,7 @@ def home():
         submit_button = request.form.get("submit_button")
         size = request.form.get("size_selector")
         design = request.form.get("design_selector")
+        hatch_size = request.form.get("hatch_size")
         print(design)
         if submit_button == "upload_image":
             print("Made it to Upload Image")
@@ -55,76 +82,29 @@ def home():
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
                 for f in prev_images:
                     os.remove(f)
-                # converts png images to svg
-                file.save(os.path.join(
-                    app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
-                resized_filename = file.filename
-                if design == "normal":
-                    print("doing normal")
-                    subprocess.run(
-                        [
-                            "convert",
-                            (os.path.join(
-                                app.config["UPLOAD_FOLDER"], file.filename)),
-                            "-gravity",
-                            "East",
-                            "-extent",
-                            "105%x100%",
-                            "-threshold",
-                            "50%",
-                            "-background",
-                            "none",
-                            "-alpha",
-                            "remove",
-                            "-negate",
-                            (
-                                os.path.join(
-                                    app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"
-                                )
 
-                            ),
-                        ]
-                    )
-                # convert svg to gcode
-                    subprocess.run([cargo, (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
-                                   "--settings", setting, "-o", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
-                elif design == "diagonal":
-                    print("doing diagonal")
-                    subprocess.run(["vpype", "hatched", (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
-                                   "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")), "write",
-                                   "--page-size", "10inx10in", "--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
-                                   "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
-                elif design == "spiral":
-                    print("doing spiral")
-                    subprocess.run(["vpype", "hatched", "-c", (os.path.join(app.config["UPLOAD_FOLDER"], file.filename)),
-                                   "write", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")), "write",
-                                   "--page-size", "10inx10in", "--center", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg"))])
-                    subprocess.run(["vpype", "read", (os.path.join(app.config["UPLOAD_FOLDER"], resized_filename[:-4] + ".svg")),
-                                   "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
-                    # add small gcode to current gcode after it has been uploaded
-                with open(logo_filename, 'r') as f:
-                    data = f.read()
-                    f.close()
+                filename, ext = os.path.splitext(file.filename)
+                new_filename = design + ext  # Construct the new filename
 
-                with open(current_Gcode, 'r') as f:
-                    old_data = f.read()
-                    f.close()
+                # Save the file with the new filename
+                image_path = os.path.join(
+                    app.config['UPLOAD_FOLDER'], secure_filename(new_filename))
+                file.save(image_path)
 
-                with open(current_Gcode, 'w') as f:
-                    f.write(data)
-                    f.write(old_data)
-                    f.close()
-
+                processing_url = "http://10.1.57.136:5000/process"
+                files = {'file': open(image_path, 'rb')}
+                response = requests.post(processing_url, files=files)
+                if response.status_code == 200:
+                    flash("Image has been uploaded and processed successfully.")
+                else:
+                    flash("Failed to process the image.")
                 flash("Image has been Uploaded and Converted successfully.")
             else:
                 flash("Invalid file format. Only JPG and PNG are allowed.")
             # converts PDF to gcode
         elif submit_button == "Upload PDF":
             file = request.files["file2"]
-            if file and allowed_file(file.filename, ["pdf"]):
+            if file and allowed_file(file.filename, ["txt"]):
                 # remove any previous pdf before uploading new pdf
                 prev_images = glob.glob(app.config["TEXT_FOLDER"] + '/*')
                 for f in prev_images:
@@ -132,15 +112,8 @@ def home():
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
                 # converts pdf to svg
-                subprocess.run(["pdftocairo", (os.path.join(app.config["TEXT_FOLDER"], filename)), "-expand",
-                               "-svg", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg"))])
-                # center the file
-                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg")), "translate", "2cm", "0in", "linemerge", "--tolerance", "0.1mm", "linesort", "linesimplify", "write",
-                                "--page-size", "14inx8.2in", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg"))])
-                # converts svg to gcode
-                subprocess.run(["vpype", "read", (os.path.join(app.config["TEXT_FOLDER"], filename[:-4] + "resized.svg")),
-                               "gwrite", "--profile", "my_own_plotter", (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
-                flash("Text file has been Uploaded Successfully.")
+                subprocess.run(['./hf2gcode', '-i', (os.path.join(app.config["TEXT_FOLDER"], filename)), '-s', '0.1',
+                               '-n', '4', '-m', '-p', '7', '-o', (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
         return redirect("/")
@@ -157,9 +130,9 @@ def servo_up():
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
     try:
-        # ser.write('\r\n\r\n'.encode())
-        # time.sleep(2)
-        # ser.flushInput()
+        ser.write('\r\n\r\n'.encode())
+        time.sleep(2)
+        ser.flushInput()
         servoup = 'm3 s10' + '\n'
         ser.write(servoup.encode())
         flash("Servo down command sent")
@@ -188,7 +161,7 @@ def servo_down():
         ser.write('\r\n\r\n'.encode())
         time.sleep(0.1)
         ser.flushInput()
-        servoDown = 'm3 s30' + '\n'
+        servoDown = 'm3 s72' + '\n'
         ser.write(servoDown.encode())
         flash("Servo up command sent")
     except Exception as e:
@@ -219,6 +192,9 @@ def Print():
         flash(f"Failed to connect to {port}")
 
     try:
+        ser.write('\r\n\r\n'.encode())
+        time.sleep(0.1)
+        ser.flushInput()
         for line in f:
             l = line.strip()  # Strip all EOL characters for streaming
             print('Sending: ' + l,)
@@ -251,6 +227,8 @@ def homing():
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
     try:
+       # if(input() == "q"):
+        #    ser.write(('M410\n').encode())
         ser.write(('$H\n').encode())
         flash("Homing command sent")
     except Exception as e:
