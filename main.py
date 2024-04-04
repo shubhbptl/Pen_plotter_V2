@@ -8,6 +8,7 @@ import glob
 import serial
 import time
 import RPi.GPIO as GPIO
+import re
 app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(
@@ -35,13 +36,24 @@ def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
+on = False
 port = '/dev/ttyAMA0'
-baud = 115200
+baud = 9600
 pin = 24
+motor_PWM = 18
+motor_Direction = 23
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(pin, GPIO.OUT)
-GPIO.output(pin, GPIO.HIGH)
+GPIO.setup(motor_Direction, GPIO.OUT)
+GPIO.setup(motor_PWM, GPIO.OUT)
+motor = GPIO.PWM(motor_PWM, 100)
+motor.start(0)
+# GPIO.output(pin, GPIO.LOW)
+# time.sleep(0.01)
+# GPIO.output(pin, GPIO.HIGH)
+
+# vpype read /home/mvths/shubh/Processing_Server/Processed_Images/normal.svg squiggles -p 1 -a 5 write saodw.svg
 
 
 @app.route("/retrive", methods=["GET", "POST"])
@@ -112,11 +124,52 @@ def home():
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["TEXT_FOLDER"], filename))
                 # converts pdf to svg
+                f = open(os.path.join(
+                    app.config["TEXT_FOLDER"], filename), "r")
+                text = f.read()
+                text = text.replace('\t', '    ')
+                f.close()
+
+                out = open(os.path.join(
+                    app.config["TEXT_FOLDER"], filename), "w")
+                out.seek(0)
+                out.write(text)
+                out.flush()
+                out.close()
                 subprocess.run(['./hf2gcode', '-i', (os.path.join(app.config["TEXT_FOLDER"], filename)), '-s', '0.1',
-                               '-n', '4', '-m', '-p', '7', '-o', (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                               '-n', '4', '-m', '-p', '7', '-f', '2500', '--z-down=72', '--z-up=45', '-x', '127', '-y', '127', '-o', (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                f = open(
+                    (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")), "r")
+                text = f.read()
+                text = re.sub("G0 Z.*", "", text)
+                text = text.replace('G1 Z', 'M3 s')
+                text = text.replace('G1 Z', 'M3 s')
+                f.close()
+
+                out = open(
+                    (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")), "w")
+                out.seek(0)
+                out.write(text)
+                out.flush()
+                out.close()
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
         return redirect("/")
+    return render_template('index.html')
+
+
+@app.route("/paper_roller_on/")
+def paper_roller_on():
+    GPIO.output(motor_Direction, GPIO.LOW)
+    motor.ChangeDutyCycle(100)
+    return render_template('index.html')
+
+
+@app.route("/paper_roller_off/")
+def paper_roller_off():
+    GPIO.output(motor_Direction, GPIO.LOW)
+    motor.ChangeDutyCycle(0)
+
     return render_template('index.html')
 
 
@@ -131,9 +184,9 @@ def servo_up():
         flash(f"Failed to connect to {port}")
     try:
         ser.write('\r\n\r\n'.encode())
-        time.sleep(2)
+        time.sleep(0.01)
         ser.flushInput()
-        servoup = 'm3 s10' + '\n'
+        servoup = 'm3 s45' + '\n'
         ser.write(servoup.encode())
         flash("Servo down command sent")
     except Exception as e:
@@ -159,7 +212,7 @@ def servo_down():
         flash(f"Failed to connect to {port}")
     try:
         ser.write('\r\n\r\n'.encode())
-        time.sleep(0.1)
+        time.sleep(0.01)
         ser.flushInput()
         servoDown = 'm3 s72' + '\n'
         ser.write(servoDown.encode())
@@ -193,7 +246,7 @@ def Print():
 
     try:
         ser.write('\r\n\r\n'.encode())
-        time.sleep(0.1)
+        time.sleep(0.01)
         ser.flushInput()
         for line in f:
             l = line.strip()  # Strip all EOL characters for streaming
@@ -243,16 +296,46 @@ def homing():
     return redirect("/")
 
 
+@app.route("/emergency_stop/")
+def emergency_stop():
+    try:
+        ser = serial.Serial(port, baud, dsrdtr=True)
+        flash(f"Connected to {port}")
+        flash("Alarm Unlocked")
+    except serial.SerialException:
+        flash(f"Failed to connect to {port}")
+    try:
+        GPIO.output(pin, GPIO.LOW)
+        time.sleep(0.01)
+        GPIO.output(pin, GPIO.HIGH)
+        ser.write(('$H\n').encode())
+        flash("Alarm reset command sent")
+    except Exception as e:
+        flash(f"Failed to send alarm reset command: {e}")
+        ser.close()
+        exit()
+    while ser.in_waiting == 0:
+        pass
+    response = ser.readline()
+    flash(f"Alarm reset response: {response}")
+    ser.close()
+    return redirect("/")
+
+
 @app.route("/reset_alarm/")  # press this button if the plotter stops
 def reset_alarm():
     try:
         ser = serial.Serial(port, baud, dsrdtr=True)
         flash(f"Connected to {port}")
+        ser.write(('M112\n').encode())
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
     try:
+        GPIO.output(pin, GPIO.LOW)
+        time.sleep(0.01)
+        GPIO.output(pin, GPIO.HIGH)
         ser.write(('$X\n').encode())
         flash("Alarm reset command sent")
     except Exception as e:

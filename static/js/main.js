@@ -1,6 +1,4 @@
 
-
-
 const marked = window.marked;
 console.log(marked);
 const request = new Request(
