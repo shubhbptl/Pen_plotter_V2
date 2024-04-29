@@ -12,8 +12,8 @@ document.querySelector('#markdown').innerHTML = html;
 
 const preview = (window.preview = new GCodePreview.init({
 	canvas: document.querySelector('canvas'),
-	lineWidth: 4,
-	buildVolume: { x: 280, y: 210, z: 150 },
+	lineWidth: 2,
+	buildVolume: { x: 450, y: 300, z: 150 },
 	initialCameraPosition: [0, 400, 450],
 	//debug: true,
 	allowDragNDrop: true,
@@ -51,7 +51,8 @@ document.getElementById('inputfile').addEventListener('change', function () {
 	} else if (
 		file.type === "image/jpeg" ||
 		file.type === "image/bmp" ||
-		file.type === "image/png"
+		file.type === "image/png" ||
+		file.type === "image/svg"
 	) {
 		fr.onload = function () {
 			let result = fr.result;
@@ -64,15 +65,16 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				const ctx = canvas.getContext("2d");
 				var val = document.getElementById('Size').value;
 				if (val == "small") {
-					canvas.width = 350;
+					canvas.width = 300;
 					canvas.height = 300;
 				} else if (val == "medium") {
-					canvas.width = 600;
+					canvas.width = 500;
 					canvas.height = 500;
 				} else if (val == "large") {
-					canvas.width = 720;
+					canvas.width = 570;
 					canvas.height = 570;
 				}
+				console.log(file.type);
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 				const dataURI = canvas.toDataURL();
 

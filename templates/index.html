@@ -33,19 +33,6 @@
 			<form class="m-2 d-grid" action="/paper_roller_off/">
 				<button class="btn btn-primary m-1" type="submit" id="paper_roller_off">paper_roller_off</button>
 			</form>
-			<p id="demo"></p>
-			<!-- <script>
-				function mouseDown() {
-				  var clicked = document.getElementById("paper_roller");
-				  if(clicked){
-					document.getElementById("demo").innerHTML = "clicked";
-				  }
-				}
-				
-				function mouseUp() {
-					document.getElementById("demo").innerHTML = "unclicked";
-				}
-				</script> -->
 			
 		</div>
 
@@ -89,7 +76,22 @@
 				<strong>PDF FILE ONLY</strong>
 				<br>
 				<input type="file" name="file2">
-				<input type="submit" accept = ".pdf" name="submit_button" value="Upload PDF">
+				<input type="submit" accept = ".svg" name="submit_button" value="Upload PDF">
+			</form>
+			<form class="m-2" method="post" enctype="multipart/form-data">
+				<strong>SVG FILE ONLY</strong>
+				<br>
+				<a class="btn btn-primary m-1" href="http://127.0.0.1:8080/squiggly" style="background-color: #555; border: none;">squiggly</a>
+
+				<br>
+				<input type="file" name="fileSvg">
+				<input type="submit" accept = ".svg" name="submit_button" value="Upload SVG">
+			</form>
+			<form class="m-2" method="POST" enctype="multipart/form-data">
+				<strong>Advance USER ONLY</strong>
+				<br>
+				<input name="text">
+				<input type="submit" name="submit_button" value="Send Gcode">
 			</form>
 		</div>
 		<div class="col-4">
