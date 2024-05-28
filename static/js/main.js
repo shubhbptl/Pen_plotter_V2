@@ -14,7 +14,7 @@ const preview = (window.preview = new GCodePreview.init({
 	canvas: document.querySelector('canvas'),
 	lineWidth: 2,
 	buildVolume: { x: 450, y: 300, z: 150 },
-	initialCameraPosition: [0, 400, 450],
+	initialCameraPosition: [0, 450, -450],
 	//debug: true,
 	allowDragNDrop: true,
 }));  // draw a diagonal line
@@ -36,8 +36,8 @@ let gcodeFile; // string
 let svgFile; // blob
 let imageFile; // blob
 
-document.getElementById('inputfile').addEventListener('change', function () {
-	let file = this.files[0];
+document.getElementById('sendInputFile').addEventListener('click', function () {
+	let file = document.getElementById('inputfile').files[0];
 	let fr = new FileReader();
 	if (file.type === "text/x.gcode" || file.type === "") {
 		fr.onload = function () {
@@ -81,6 +81,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 				const res = await fetch(dataURI);
 				imageFile = await res.blob();
 				imageFile = new File([imageFile], file.name)
+				
 				handleImageFile();
 			}
 		}

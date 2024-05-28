@@ -13,19 +13,19 @@
 				<button class="btn btn-primary m-1" type="submit">Home Pen Plotter</button>
 			</form>
 			<form class="m-2 d-grid" action="/reset_alarm/">
-				<button class="btn btn-primary m-1" type="submit">Reset Alarm</button>
+				<button class="btn btn-warning" type="submit">Reset Alarm</button>
 			</form>
 			<form class="m-2 d-grid" action="/Print/">
-				<button class="btn btn-primary m-1" type="submit">Print</button>
+				<button class="btn btn-success" type="submit">Print</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_up/">
-				<button class="btn btn-primary m-1" type="submit" id="servo_up-button">Servo Up</button>
+				<button class="btn btn-primary m-1" type="submit" id="servo_up-button" >Servo Up</button>
 			</form>
 			<form class="m-2 d-grid" action="/servo_down/">
 				<button class="btn btn-primary m-1" type="submit" id="servo_down-button">Servo Down</button>
 			</form>
 			<form class="m-2 d-grid" action="/emergency_stop/">
-				<button class="btn btn-primary m-1" type="submit" id="emergency_stop">Emergency Stop</button>
+				<button class=" btn btn-danger" type="submit" id="emergency_stop">Emergency Stop</button>
 			</form>
 			<form class="m-2 d-grid" action="/paper_roller_on/">
 				<button class="btn btn-primary m-1" type="submit" id="paper_roller_on">paper_roller_on</button>
@@ -43,6 +43,7 @@
 						<strong>PNG FILE ONLY</strong>
 						<br>
 						<input type="file" id="inputfile"></input>
+						<button type="button" id="sendInputFile">Upload Img</button>
 					</form>
 					<select id = "Size" name="size_selector">
 						<option value="small">
@@ -79,10 +80,9 @@
 				<input type="submit" accept = ".svg" name="submit_button" value="Upload PDF">
 			</form>
 			<form class="m-2" method="post" enctype="multipart/form-data">
-				<strong>SVG FILE ONLY</strong>
+				<a class="btn btn-primary m-1" href="http://10.1.57.15:8080/squiggly" style="background-color: #555; border: none;">squiggly</a>
 				<br>
-				<a class="btn btn-primary m-1" href="http://127.0.0.1:8080/squiggly" style="background-color: #555; border: none;">squiggly</a>
-
+				<strong>SVG FILE ONLY</strong>
 				<br>
 				<input type="file" name="fileSvg">
 				<input type="submit" accept = ".svg" name="submit_button" value="Upload SVG">
@@ -95,11 +95,12 @@
 			</form>
 		</div>
 		<div class="col-4">
-			{% for message in get_flashed_messages() %}
 			<div class="alert alert-danger">
+				{% for message in get_flashed_messages() %}
 				{{ message }}
+				<br/>
+				{% endfor %} 
 			</div>
-			{% endfor %} 
 		</div>
 
 	</section>

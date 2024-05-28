@@ -9,6 +9,7 @@ import serial
 import time
 import RPi.GPIO as GPIO
 import re
+import math
 app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "Gooseberry"
 app.config["UPLOAD_FOLDER"] = os.path.join(
@@ -39,6 +40,8 @@ def allowed_file(filename, allowed_extensions):
 
 port = '/dev/ttyAMA0'
 baud = 115200
+ser = serial.Serial(port, baud)
+
 pin = 24
 motor_Direction = 23
 sensor1 = 22
@@ -46,7 +49,7 @@ motor_PWM = 18
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(pin, GPIO.OUT)
-GPIO.setup(sensor1,GPIO.IN)
+GPIO.setup(sensor1, GPIO.IN)
 GPIO.setup(motor_Direction, GPIO.OUT)
 GPIO.setup(motor_PWM, GPIO.OUT)
 GPIO.output(pin, GPIO.LOW)
@@ -80,6 +83,7 @@ def retrive_gcode():
 def squiggly():
     return render_template('squiggly.html')
 
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
@@ -92,7 +96,7 @@ def home():
             print("Made it to Upload Image")
             file = request.files["file1"]
             print(file)
-            if file and allowed_file(file.filename, ["jpg", "jpeg", "png","svg"]):
+            if file and allowed_file(file.filename, ["jpg", "jpeg", "png", "svg"]):
                 print("Made it to allowed_file")
                 # Delete Previous Image
                 prev_images = glob.glob(app.config["UPLOAD_FOLDER"] + '/*')
@@ -120,12 +124,12 @@ def home():
             # converts PDF to gcode
         elif submit_button == "Upload SVG":
             file = request.files["fileSvg"]
-            if(file and allowed_file(file.filename, ["svg"])):
+            if (file and allowed_file(file.filename, ["svg"])):
                 prev_images = glob.glob(app.config["TEXT_FOLDER"] + '/*')
                 for f in prev_images:
                     os.remove(f)
                 filename = secure_filename(file.filename)
-                
+
                 filename, ext = os.path.splitext(file.filename)
                 new_filename = "squiggly" + ext
                 image_path = os.path.join(
@@ -144,7 +148,7 @@ def home():
                 flash("Invalid file format. Only JPG and PNG are allowed.")
         elif submit_button == "Upload PDF":
             file = request.files["file2"]
-            if file and allowed_file(file.filename, ["svg"]):
+            if file and allowed_file(file.filename, ["txt"]):
                 # remove any previous pdf before uploading new pdf
                 prev_images = glob.glob(app.config["TEXT_FOLDER"] + '/*')
                 for f in prev_images:
@@ -164,60 +168,88 @@ def home():
                 out.write(text)
                 out.flush()
                 out.close()
-                subprocess.run(['./hf2gcode', '-i', (os.path.join(app.config["TEXT_FOLDER"], filename)), '-s', '0.3',
-                               '-n', '9', '-m', '-p', '7', '-f', '2500', '--z-down=72', '--z-up=45', '-l', '-x', '50', '-y', '127', '-o', (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
+                subprocess.run(['hf2gcode', '-i', (os.path.join(app.config["TEXT_FOLDER"], filename)), '-s', '0.3',
+                               '-n', '9', '-m', '-p', '7', '-f', '2500', '--z-down=72', '--z-up=45', '-l', '-x', '-600', '-y', '-100', '-o', (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode"))])
                 f = open(
                     (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")), "r")
                 text = f.read()
-                text = re.sub("G0 Z.*", "M3 s45"+'\n'+'G4 p0.3\n', text)
-                text = re.sub("M3 S10000", "G10 P0 L20 X0 Y0 Z0", text)
+                text = re.sub("G0 Z.*", "M3 s45"+'\n'+'G4 p0.3.1\n', text)
+                text = re.sub("M3 S10000", "", text)
                 text = re.sub("M5", "M3 s72", text)
                 text = re.sub("G1 Z.*", "M3 s72"+'\n'+'G4 p0.3\n', text)
                 f.close()
-
                 out = open(
                     (os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")), "w")
                 out.seek(0)
                 out.write(text)
                 out.flush()
                 out.close()
+                process_gcode((os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")),(os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")),180)
+                with open(logo_filename, 'r') as f:
+                    data = f.read()
+                    f.close()
+
+                with open(current_Gcode, 'r') as f:
+                    old_data = f.read()
+                    f.close()
+
+                with open(current_Gcode, 'w') as f:
+                    f.write(data)
+                    f.write(old_data)
+                    f.close()
             else:
                 flash("Invalid file format. Only .pdf files are allowed.")
         elif submit_button == "Send Gcode":
             file = request.form["text"]
-            
             try:
-                ser = serial.Serial(port, baud, dsrdtr=True)
-                flash(f"Connected to {port}")
-                if(file == ""):
+                if (file == ""):
                     return redirect("/")
                 ser.write((file + "\n").encode())
                 flash(file)
             except serial.SerialException:
                 flash(f"Failed to connect to {port}")
-                ser.close()
+
                 return redirect("/")
-            while ser.in_waiting == 0:
+            while ser.in_waiting != 0:
+                response = ser.readline(1000)
+                flash(response)
                 pass
-            response = ser.readline()
-            flash(f"Servo up response: {response}")
-            ser.close()
+
+
         return redirect("/")
     return render_template('index.html')
 
+def apply_equation(x, y, angle):
+    new_x = x * math.cos(angle) - y * math.sin(angle)
+    new_y = x * math.sin(angle) + y * math.cos(angle)
+    return new_x, new_y
+
+def process_gcode(input_file, output_file, angle):
+    with open(input_file, "r") as f:
+        gcode = f.read()
+        # Apply equation to X and Y coordinates
+        new_gcode = re.sub(
+        r"(X|Y)(-?\d+\.?\d*)",
+        lambda match: f"{match.group(1)}{apply_equation(float(match.group(2)), 0, angle)[0]:.4f}"
+        if match.group(1) == "X"
+        else f"{match.group(1)}{apply_equation(0, float(match.group(2)), angle)[1]:.4f}",
+        gcode)  
+        # Write modified G-code to output file
+        with open(output_file, "w") as f:
+            f.write(new_gcode) 
 
 @app.route("/paper_roller_on/")
 def paper_roller_on():
-    GPIO.output(motor_Direction,GPIO.HIGH)
-    GPIO.output(motor_PWM,GPIO.HIGH)
+    GPIO.output(motor_Direction, GPIO.HIGH)
+    GPIO.output(motor_PWM, GPIO.HIGH)
    # motor.ChangeDutyCycle(85)
     return render_template('index.html')
 
 
 @app.route("/paper_roller_off/")
 def paper_roller_off():
-    GPIO.output(motor_Direction,GPIO.HIGH)
-    GPIO.output(motor_PWM,GPIO.LOW)
+    GPIO.output(motor_Direction, GPIO.HIGH)
+    GPIO.output(motor_PWM, GPIO.LOW)
 
     return render_template('index.html')
 
@@ -225,8 +257,6 @@ def paper_roller_off():
 @app.route("/servo_up/")
 def servo_up():
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
     except serial.SerialException:
@@ -234,27 +264,24 @@ def servo_up():
     try:
         ser.write('\r\n\r\n'.encode())
         time.sleep(0.01)
-        ser.flushInput()
+        ser.flush()
         servoup = 'm3 s45' + '\n'
         ser.write(servoup.encode())
         flash("Servo down command sent")
     except Exception as e:
         flash(f"Failed to send servo down command: {e}")
-        ser.close()
+
         return redirect('/')
     while ser.in_waiting == 0:
         pass
     response = ser.readline()
     flash(f"Servo up response: {response}")
-    ser.close()
     return redirect('/')
 
 
 @app.route("/servo_down/")
 def servo_down():
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
     except serial.SerialException:
@@ -262,19 +289,19 @@ def servo_down():
     try:
         ser.write('\r\n\r\n'.encode())
         time.sleep(0.01)
-        ser.flushInput()
+        ser.flush()
         servoDown = 'm3 s72' + '\n'
         ser.write(servoDown.encode())
         flash("Servo up command sent")
     except Exception as e:
         flash(f"Failed to send servo up command: {e}")
-        ser.close()
+
         return redirect('/')
     while ser.in_waiting == 0:
         pass
-    response = ser.readline()
+    
+    response = ser.readlines()
     flash(f"Servo up response: {response}")
-    ser.close()
     return redirect("/")
 
 
@@ -283,34 +310,29 @@ def Print():
     filename = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")
     f = open(filename, 'r')
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
         ser.write(('$X\n').encode())
         time.sleep(0.1)
         ser.write(('$H\n').encode())
-
         flash("Alarm Unlocked")
     except serial.SerialException:
         flash(f"Failed to connect to {port}")
 
     while True:
-        # GPIO.output(motor_Direction,GPIO.LOW) 
-        # GPIO.output(motor_Direction,GPIO.HIGH)
+
         if GPIO.input(sensor1) == 1:
-            GPIO.output(motor_Direction,GPIO.HIGH)
-            GPIO.output(motor_PWM,GPIO.HIGH)
-            # print(sensor1)
+            GPIO.output(motor_Direction, GPIO.HIGH)
+            GPIO.output(motor_PWM, GPIO.HIGH)
         else:
             time.sleep(1)
-            GPIO.output(motor_Direction,GPIO.LOW)
-            GPIO.output(motor_PWM,GPIO.LOW)
+            GPIO.output(motor_Direction, GPIO.LOW)
+            GPIO.output(motor_PWM, GPIO.LOW)
             time.sleep(0.5)
-            # print(sensor1)
             break
     try:
         ser.write('\r\n\r\n'.encode())
         time.sleep(0.01)
         ser.flushInput()
+        ser.write(('$H\n').encode())
         for line in f:
             l = line.strip()  # Strip all EOL characters for streaming
             print('Sending: ' + l,)
@@ -320,80 +342,59 @@ def Print():
             print(' : ' + grbl_out_str)
     except FileNotFoundError:
         flash(f"File {filename} not found")
-        ser.close()
+
         return redirect('/')
     except:
         flash("Failed to upload G-code file")
-        ser.close()
+
         return redirect('/')
     ser.write(('$H\n').encode())
     flash("Gcode Uploaded")
-    ser.close()
     # motor roller
-            
+
     return redirect("/")
 
 
 @app.route("/homing/")
 def homing():
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
-       # ser.write(('$X\n').encode())
-       # flash("Alarm Unlocked")
-    except serial.SerialException:
-        flash(f"Failed to connect to {port}")
-    try:
-       # if(input() == "q"):
-        #    ser.write(('M410\n').encode())
         ser.write(('$H\n').encode())
         ser.write(('G10 P0 L20 X0 Y0 Z0\n').encode())
         flash("Homing command sent")
     except Exception as e:
         flash(f"Failed to send homing command: {e}")
-        ser.close()
-        exit()
     while ser.in_waiting == 0:
         pass
     response = ser.readline()
     flash(f"Homing response: {response}")
-    ser.close()
     return redirect("/")
-
 
 @app.route("/emergency_stop/")
 def emergency_stop():
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
-        flash("Alarm Unlocked")
-    except serial.SerialException:
-        flash(f"Failed to connect to {port}")
-    try:
+        ser.close()
+        ser.open()
         GPIO.output(pin, GPIO.LOW)
         time.sleep(0.01)
         GPIO.output(pin, GPIO.HIGH)
-        ser.write(('M3 s45\n').encode())
+        time.sleep(1.5)
+        ser.write(('$X\n').encode())
+        servoup = 'm3 s45' + '\n'
+        ser.write(servoup.encode())
         ser.write(('$H\n').encode())
         flash("Alarm reset command sent")
     except Exception as e:
         flash(f"Failed to send alarm reset command: {e}")
-        ser.close()
-        exit()
     while ser.in_waiting == 0:
         pass
     response = ser.readline()
     flash(f"Alarm reset response: {response}")
-    ser.close()
     return redirect("/")
 
 
 @app.route("/reset_alarm/")  # press this button if the plotter stops
 def reset_alarm():
     try:
-        ser = serial.Serial(port, baud)
-        flash(f"Connected to {port}")
-        ser.write(('M112\n').encode())
         ser.write(('$X\n').encode())
         flash("Alarm Unlocked")
     except serial.SerialException:
@@ -406,13 +407,10 @@ def reset_alarm():
         flash("Alarm reset command sent")
     except Exception as e:
         flash(f"Failed to send alarm reset command: {e}")
-        ser.close()
-        exit()
     while ser.in_waiting == 0:
         pass
     response = ser.readline()
     flash(f"Alarm reset response: {response}")
-    ser.close()
     return redirect("/")
 
 
