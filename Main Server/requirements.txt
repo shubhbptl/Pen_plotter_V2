@@ -1,5 +1,0 @@
-Flask==3.0.0
-Pillow==10.1.0
-pyserial==3.5
-ImageMagic==0.2.1 
-RPi.GPIO==0.7.1
