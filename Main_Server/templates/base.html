@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+	<head>
+		<title>Pen_Plotter</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+		<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"> -->
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" integrity="sha512-Ya9H+OPj8NgcQk34nCrbehaA0atbzGdZCI2uCbqVRELgnlrh8vQ2INMnkadVMSniC54HChLIh5htabVuKJww8g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	</head>
+	<body>
+		{% block body %}{% endblock body %}
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.157.0/three.min.js" integrity="sha512-nogdM20cZX4FjsqU5H5ecK3vw8LjYN1AcUUWi7asLUVP3eJK5wldywvqFMW8CLd5/xoiJaIL3eXG82SlOWZkTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<script src="/static/js/gcode-preview.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.0.3/marked.min.js" integrity="sha512-lYRvlgmxv7o+vp/Gmo3p4qLML4csV0loGFy8cP2vpMSwV4F65BTq6LUZyq5zlV5s/LB0KkdGhd/tnMCmjWardA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<script type="module" src="/static/js/main.js"></script>
+	</body>
+</html>
