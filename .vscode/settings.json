@@ -1,7 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./flask-serial"
-    ],
-    "python.analysis.autoImportCompletions": false,
-    "python.analysis.typeCheckingMode": "off"
-}
