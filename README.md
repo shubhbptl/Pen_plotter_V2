@@ -2,7 +2,19 @@
 ### MHS/MVTHS Robotics and Enginering                
 ##### By: Shubh Patel, Roman Rice
 ---------------
+# Requirement
+```python
+pip install -r requirements.txt
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+pipx install vpype\
+&& pipx inject vpype hatched\
+&& pipx inject vpype vpype-gcode
+mv ./bundled_configs.toml /root/.local/share/pipx/venvs/vpype/lib/python3.9/site-packages/vpype_gcode/bundled_configs.toml
+vpype -c /root/.local/share/pipx/venvs/vpype/lib/python3.9/site-packages/vpype_gcode/bundled_configs.toml
+``` 
 # Installation Guide
+
 ##  Step 1: change line of code 114,139 in Main.py
 change to
 ```python
@@ -24,12 +36,12 @@ Ex:
 main_url = "10.1.57.108/retrive"
 ```
 
-## Step 1: Start the Main Server
+## Step 2: Start the Main Server
 First, start the main server by navigating to the Main_Server directory and running the main Python script.
 ```python3
 python3 /Main_Server/main.py
 ```
-## Step 2: Start the Processing Server
+## Step 3: Start the Processing Server
 Next, start the processing server by navigating to the Processing_Server/Server directory and running the processing server script.
 ```python3
 python3 /Processing_Server/Server/processing_server.py
