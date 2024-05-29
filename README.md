@@ -3,6 +3,27 @@
 ##### By: Shubh Patel, Roman Rice
 ---------------
 # Installation Guide
+##  Step 1: change line of code 114,139 in Main.py
+change to
+```python
+processing_url = "Your_Processing_Server_Ip/process"
+```
+your Ip address that your running your server on
+Ex:
+```python
+processing_url = "10.1.57.108/process"
+```
+## Line 122 in processing_server.py
+change to
+```python
+main_url = "Main_Server_URL/retrive"
+```
+your Ip address that your running your server on
+Ex:
+```python
+main_url = "10.1.57.108/retrive"
+```
+
 ## Step 1: Start the Main Server
 First, start the main server by navigating to the Main_Server directory and running the main Python script.
 ```python3
@@ -12,7 +33,7 @@ python3 /Main_Server/main.py
 Next, start the processing server by navigating to the Processing_Server/Server directory and running the processing server script.
 ```python3
 python3 /Processing_Server/Server/processing_server.py
-``` 
+```
 ## Utilization
 
 1. Upload a file to the pen plotter server.
