@@ -119,7 +119,7 @@ def process_image():
         gcode_path = os.path.join(app.config["GCODE_FOLDER"], "previous.gcode")       
 
         # Send the processed G-code content back to the main server
-        main_url = "http://10.1.57.15:8080/retrive"
+        main_url = "Main_Server_URL/retrive"
         files = {'gcode_file': open(gcode_path, 'rb')}
         response = requests.post(main_url, files=files)
         if response.status_code == 200:
