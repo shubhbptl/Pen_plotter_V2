@@ -111,7 +111,7 @@ def home():
                     app.config['UPLOAD_FOLDER'], secure_filename(new_filename))
                 file.save(image_path)
 
-                processing_url = "http://10.1.57.136:5000/process"
+                processing_url = "Your_Processing_Server_Ip/process"
                 files = {'file': open(image_path, 'rb')}
                 response = requests.post(processing_url, files=files)
                 if response.status_code == 200:
@@ -136,7 +136,7 @@ def home():
                     app.config['TEXT_FOLDER'], secure_filename(new_filename))
                 file.save(image_path)
 
-                processing_url = "http://10.1.57.136:5000/process"
+                processing_url = "Your_Processing_Server_Ip/process"
                 files = {'file': open(image_path, 'rb')}
                 response = requests.post(processing_url, files=files)
                 if response.status_code == 200:
