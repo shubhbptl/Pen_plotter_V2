@@ -44,7 +44,7 @@ python3 /Main_Server/main.py
 ## Important Step 3: Start the Processing Server, if you dont start this server Img won't be able to convert to gcode
 Next, start the processing server by navigating to the Processing_Server/Server directory and running the processing server script.
 ```python3
-python3 /Processing_Server/Server/processing_server.py
+python3 /Processing_Server/Processing_Server/processing_server.py
 ```
 ## Utilization
 
