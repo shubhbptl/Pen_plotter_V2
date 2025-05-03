@@ -15,7 +15,7 @@ vpype -c /root/.local/share/pipx/venvs/vpype/lib/python3.9/site-packages/vpype_g
 ``` 
 # Installation Guide
 
-##  Step 1: change line of code 114,139 in Main.py
+##  Step 1: change line of code #114 and #139 in Main.py
 change to
 ```python
 processing_url = "Your_Processing_Server_Ip/process"
